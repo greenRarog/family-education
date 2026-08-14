@@ -1,58 +1,838 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Family Education
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Платформа для семейного образования.
 
-## About Laravel
+Проект помогает семьям и педагогам находить друг друга для организации небольших учебных групп, индивидуального или
+группового обучения.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+На текущем этапе проект ориентирован на РФ.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+# Roadmap
 
-## Learning Laravel
+## Фаза 0. Foundation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Архитектурный и инфраструктурный фундамент проекта.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- [x] Laravel
+- [x] PostgreSQL
+- [x] Redis
+- [x] Docker
+- [x] Docker Compose
+- [x] CI
+- [x] Pest
+- [x] Code style
+- [x] Static analysis
+- [x] Базовая структура проекта
+- [x] Authentication
+- [x] Local development environment
+- [x] VPS deployment
+- [x] HTTPS / Let's Encrypt
+- [x] Автоматическое продление SSL-сертификата
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+**Результат:**
 
-## Agentic Development
+> Пустое приложение с настроенным окружением, CI, authentication и возможностью разворачивания локально и на VPS.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+---
 
-```bash
-composer require laravel/boost --dev
+## Фаза 1. Identity + Family
 
-php artisan boost:install
+Цель — пользователь должен иметь полноценную учётную запись и профиль семьи.
+
+### Authentication
+
+- [ ] Регистрация
+- [ ] Login
+- [ ] Logout
+- [ ] Восстановление пароля
+- [ ] Тип пользователя
+    - [ ] Family
+    - [ ] Teacher
+
+### Family profile
+
+- [ ] Создание профиля семьи
+- [ ] Редактирование профиля
+- [ ] Город
+- [ ] Добавление детей
+- [ ] Редактирование детей
+- [ ] Удаление детей
+- [ ] Возраст ребёнка
+- [ ] Возможность иметь несколько детей в одной семье
+
+### Notifications settings
+
+- [ ] Настройки уведомлений
+- [ ] Email notifications
+- [ ] Подготовить возможность подключения Telegram в будущем
+
+**Результат:**
+
+> Зарегистрированная семья может управлять своим профилем и списком детей.
+
+---
+
+## Фаза 2. Geography + Catalog
+
+Справочные данные, необходимые для объявлений и дальнейшего поиска.
+
+### Geography
+
+- [ ] Города
+- [ ] Районы
+- [ ] Станции метро
+- [ ] Связь города и районов
+- [ ] Связь города и станций метро
+
+На первом этапе не требуется импортировать всю Россию.
+
+Можно начать с нескольких крупных городов и постепенно расширять справочник.
+
+### Catalog
+
+- [ ] Предметы
+- [ ] Автоматическое добавление нового предмета при создании
+- [ ] Нормализация названий предметов
+- [ ] Запрещённые слова
+- [ ] Проверка пользовательского текста на запрещённые слова
+
+### Administration
+
+- [ ] Административное управление городами
+- [ ] Административное управление районами
+- [ ] Административное управление станциями метро
+- [ ] Административное управление предметами
+- [ ] Административное управление запрещёнными словами
+
+**Результат:**
+
+> В системе есть минимальный набор справочников, необходимых для создания объявлений.
+
+---
+
+## Фаза 3. Advertisement
+
+Главный MVP-срез.
+
+Объявления являются публичным интерфейсом взаимодействия пользователей.
+
+### Advertisement types
+
+- [ ] `family → family`
+- [ ] `family → teacher`
+- [ ] `teacher → service`
+
+### Family → Family
+
+Семья может создать объявление:
+
+> Ищу участников в учебную группу.
+
+- [ ] Создание объявления
+- [ ] Выбор детей, участвующих в группе
+- [ ] Указание допустимого возраста участников
+- [ ] Город
+- [ ] Район
+- [ ] Станция метро
+- [ ] Описание
+- [ ] Редактирование
+- [ ] Публикация
+- [ ] Закрытие
+
+### Family → Teacher
+
+Семья может создать объявление:
+
+> Ищу педагога.
+
+- [ ] Предмет
+- [ ] Дети
+- [ ] Возраст детей
+- [ ] Формат
+- [ ] Город
+- [ ] Район
+- [ ] Станция метро
+- [ ] Описание
+- [ ] Редактирование
+- [ ] Публикация
+- [ ] Закрытие
+
+### Teacher → Service
+
+Педагог может создать объявление об услуге.
+
+- [ ] Предмет
+- [ ] Формат
+- [ ] Онлайн / локально
+- [ ] Персонально / группа
+- [ ] Город
+- [ ] Район
+- [ ] Станция метро
+- [ ] Описание
+- [ ] Редактирование
+- [ ] Публикация
+- [ ] Закрытие
+
+### Общая функциональность
+
+- [ ] Список объявлений
+- [ ] Просмотр объявления
+- [ ] Базовые фильтры
+- [ ] Фильтр по типу
+- [ ] Фильтр по городу
+- [ ] Фильтр по возрасту
+- [ ] Фильтр по предмету
+- [ ] Фильтр по формату
+- [ ] Пагинация
+- [ ] Публичный URL объявления
+- [ ] Expiration
+- [ ] Автоматическое закрытие объявления через 1 год
+- [ ] Уведомление владельцу об истечении срока
+
+**Правило:**
+
+> Профили пользователей не являются публичными. Публичными являются только объявления.
+
+**Результат:**
+
+> Пользователь может найти подходящее объявление или создать собственное.
+
+---
+
+## Фаза 4. Teacher
+
+После реализации семейных объявлений добавляется полноценный профиль педагога.
+
+### Teacher profile
+
+- [ ] Регистрация педагога
+- [ ] Редактирование профиля
+- [ ] Предметы
+- [ ] Образование
+- [ ] Диплом
+- [ ] Возможность выбирать, какие данные профиля отображаются в объявлении
+- [ ] Город
+- [ ] Районы
+- [ ] Станции метро
+
+### Teacher advertisements
+
+- [ ] Создание объявления услуги
+- [ ] Несколько объявлений у одного педагога
+- [ ] Разные предметы
+- [ ] Разные форматы
+- [ ] Онлайн
+- [ ] Локально
+- [ ] Персонально
+- [ ] Группа
+
+**Результат:**
+
+> Педагог может самостоятельно представить несколько различных услуг через отдельные объявления.
+
+---
+
+## Фаза 5. Response + Messaging
+
+Основной механизм коммуникации.
+
+```text
+Advertisement
+      ↓
+   Response
+      ↓
+ Conversation
+      ↓
+    Message
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Response
 
-## Contributing
+- [ ] Отклик на объявление
+- [ ] Отклик доступен только зарегистрированным пользователям
+- [ ] Один пользователь может сделать только один отклик на конкретное объявление
+- [ ] Один отклик = один диалог
+- [ ] Запрет повторного отклика
+- [ ] Отклик содержит сообщение
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Conversation
 
-## Code of Conduct
+- [ ] Создание диалога после отклика
+- [ ] Список диалогов
+- [ ] Просмотр диалога
+- [ ] Доступ к объявлению из диалога
+- [ ] Возможность открыть закрытое/истёкшее объявление из существующего диалога
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Messages
 
-## Security Vulnerabilities
+- [ ] Отправка сообщений
+- [ ] Получение сообщений
+- [ ] Read/unread
+- [ ] Счётчик непрочитанных сообщений
+- [ ] Дата/время сообщения
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**Результат:**
 
-## License
+> Пользователи могут связаться друг с другом только через отклик на объявление.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## Фаза 6. Notifications
+
+### Сначала реализуется email.
+
+- [ ] Events
+- [ ] NewResponse
+- [ ] NewMessage
+- [ ] AdvertisementExpired
+- [ ] Email
+- [ ] Email при новом отклике
+- [ ] Email при новом сообщении
+- [ ] Email об истечении объявления
+- [ ] Настройки email-уведомлений
+- [ ] Telegram
+
+### Подключается после email без изменения основной доменной логики.
+
+- [ ] Telegram notification channel
+- [ ] Подключение Telegram
+- [ ] Настройки Telegram-уведомлений
+
+**Результат:**
+
+> Уведомления отделены от бизнес-логики и могут отправляться через разные каналы.
+
+
+
+---
+
+## Фаза 7. Moderation
+
+### Минимальная административная панель.
+
+- [ ] Administration
+- [ ] Users
+- [ ] Advertisements
+- [ ] Reports
+- [ ] Subjects
+- [ ] Blocked terms
+- [ ] Cities
+- [ ] Districts
+- [ ] Metro stations
+- [ ] Actions
+- [ ] Заблокировать пользователя
+- [ ] Удалить пользователя
+- [ ] Удалить объявление
+- [ ] Закрыть объявление
+- [ ] Обработать жалобу
+- [ ] Управлять справочниками
+- [ ] Reports
+- [ ] Жалоба на объявление
+- [ ] Причина жалобы
+- [ ] Просмотр жалоб администратором
+- [ ] Закрытие жалобы
+- [ ] История действий администратора
+
+**Результат:**
+
+> Администратор может поддерживать платформу в рабочем состоянии без прямого доступа к базе данных.
+
+---
+
+## Фаза 8. MVP Hardening
+
+### Подготовка проекта к реальным пользователям.
+
+- [ ] Security
+- [ ] Rate limiting
+- [ ] Защита от массовых откликов
+- [ ] Защита от спама
+- [ ] Проверка пользовательского текста
+- [ ] Privacy policy
+- [ ] Удаление пользовательских данных
+- [ ] Обработка удаления пользователя
+- [ ] Audit
+- [ ] Audit log
+- [ ] Логирование административных действий
+- [ ] Логирование критических событий
+- [ ] Testing
+- [ ] Authentication tests
+- [ ] Family tests
+- [ ] Teacher tests
+- [ ] Advertisement tests
+- [ ] Expiration tests
+- [ ] Response tests
+- [ ] Messaging tests
+- [ ] Notification tests
+- [ ] Moderation tests
+- [ ] Production
+- [ ] SEO
+- [ ] Analytics
+- [ ] Error tracking
+- [ ] Database backup
+- [ ] Проверка восстановления backup
+- [ ] Мониторинг приложения
+- [ ] Мониторинг дискового пространства
+- [ ] Мониторинг Docker
+- [ ] Проверка SSL renewal
+
+**Результат:**
+
+> Проект готов для первых реальных семей и педагогов.
+
+---
+
+# Development
+
+## Requirements
+
+Для локальной разработки необходимы:
+
+- Windows / Linux / macOS
+- WSL2 (для Windows)
+- Ubuntu или другой Linux-дистрибутив в WSL
+- Docker Desktop
+- Git
+
+Внутри Docker используются:
+
+- PHP 8.4
+- Laravel
+- PostgreSQL 17
+- Redis 8
+- Nginx
+- Node.js 22
+
+PHP, Composer, PostgreSQL, Redis, Nginx и Node.js не требуется устанавливать непосредственно в операционную систему.
+
+---
+
+# Local setup
+
+## 1. Clone repository
+
+```bash
+git clone <repository-url>
+cd family-education
+```
+
+## 2. Configure environment
+
+```bash   
+cp .env.example .env
+```
+
+При необходимости изменить значения в .env.
+
+Для Docker-пользователя должны быть указаны:
+
+```dotenv
+WWWUSER=1000
+WWWGROUP=1000
+```
+
+Проверить UID/GID текущего пользователя:
+
+```bash
+id -u
+id -g
+```
+
+### 3. Start containers
+
+```bash
+   docker compose up -d --build
+```
+
+Проверить состояние:
+
+```bash
+docker compose ps
+```
+
+Ожидаемые сервисы:
+
+```
+app
+nginx
+node
+postgres
+redis
+```
+
+### 4. Install PHP dependencies
+
+```bash
+   docker compose exec app composer install
+```
+
+### 5. Generate application key
+
+```bash   
+docker compose exec app php artisan key:generate
+```
+
+### 6. Run migrations
+
+```bash
+   docker compose exec app php artisan migrate
+```
+
+### 7. Install frontend dependencies
+
+```bash
+   docker compose exec node npm install
+```
+
+### 8. Start frontend development server
+
+```bash
+   docker compose up -d node
+```
+
+## Application
+
+Local application:
+
+```
+http://localhost:8080
+```
+
+Vite development server:
+
+```
+http://localhost:5173
+```
+
+## Useful local commands
+
+### Start
+
+```bash
+docker compose up -d
+```
+
+### Stop
+
+```bash
+docker compose down
+```
+
+### Rebuild
+
+```bash
+docker compose up -d --build
+```
+
+### Laravel Tinker
+
+```bash
+docker compose exec app php artisan tinker
+```
+
+### Tests
+
+```bash
+docker compose exec app composer test
+```
+
+### Code style / static analysis
+
+```bash
+docker compose exec app composer check
+```
+
+### Artisan
+
+```bash
+docker compose exec app php artisan <command>
+```
+
+### Composer
+
+```bash
+docker compose exec app composer <command>
+```
+
+### NPM
+
+```bash
+docker compose exec node npm <command>
+```
+
+### View logs
+
+```bash
+docker compose logs -f
+```
+
+Logs конкретного сервиса:
+
+```bash
+docker compose logs -f app
+docker compose logs -f nginx
+docker compose logs -f postgres
+docker compose logs -f redis
+```
+
+---
+
+# Production deployment
+
+Production deployment рассчитан на VPS с Linux и Docker.
+
+## Requirements
+
+На VPS необходимо:
+
+- Linux
+- Docker
+- Docker Compose
+- Git
+- открытые порты 80 и 443
+- DNS-запись домена, указывающая на VPS
+
+Пример:
+
+```
+example.com      A    <VPS_IP>
+www.example.com  A    <VPS_IP>
+```
+
+### 1. Clone repository
+
+```bash
+   git clone <repository-url> /var/www/family-education
+   cd /var/www/family-education
+```
+
+### 2. Create environment
+
+```bash
+   cp .env.example .env
+```
+
+Заполнить production values.
+
+Особенно важно:
+
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://example.com
+
+Database credentials должны быть заданы через environment.
+
+### 3. Build and start application
+
+Production использует отдельный Compose-файл:
+
+```bash
+docker compose -f docker-compose.stage.yml up -d --build
+```
+
+Проверить:
+
+```bash
+docker compose -f docker-compose.stage.yml ps
+```
+
+### 4. Run migrations
+
+   ```bash
+docker compose -f docker-compose.stage.yml exec app php artisan migrate --force
+```
+
+### 5. Check application
+
+```bash
+   curl -I http://example.com
+```
+
+На этом этапе приложение должно быть доступно по HTTP.
+
+## HTTPS
+
+SSL-сертификат выпускается через Let's Encrypt и Certbot.
+
+Challenge-файлы находятся в:
+
+```bash
+certbot/www/
+```
+
+Сертификаты:
+
+```bash
+letsencrypt/
+```
+
+Получение сертификата:
+
+```bash
+docker run --rm \
+-v "$(pwd)/certbot/www:/var/www/certbot" \
+-v "$(pwd)/letsencrypt:/etc/letsencrypt" \
+certbot/certbot certonly \
+--webroot \
+-w /var/www/certbot \
+-d example.com \
+-d www.example.com \
+--email <email> \
+--agree-tos \
+--no-eff-email
+```
+
+После получения сертификата необходимо перезапустить/reload Nginx:
+
+```bash
+docker compose -f docker-compose.stage.yml restart nginx
+```
+
+## SSL renewal
+
+Проверить возможность автоматического продления:
+
+```bash
+./scripts/renew-certificate.sh
+```
+
+Тестовое продление:
+
+```bash
+docker run --rm \
+-v "$(pwd)/certbot/www:/var/www/certbot" \
+-v "$(pwd)/letsencrypt:/etc/letsencrypt" \
+certbot/certbot renew \
+--webroot \
+-w /var/www/certbot \
+--dry-run \
+--no-random-sleep-on-renew
+```
+
+Автоматическое продление выполняется через cron.
+
+Пример:
+
+```bash
+0 3 * * * /var/www/family-education/scripts/renew-certificate.sh >> /var/log/family-education-certbot.log 2>&1
+```
+
+Certbot самостоятельно определяет, требуется ли продление сертификата.
+
+## Deployment script
+
+Production deployment выполняется через:
+
+```bash
+./scripts/deploy.sh
+```
+
+Типовой процесс:
+
+```
+GitHub
+↓
+CI
+↓
+SSH
+↓
+VPS
+↓
+deploy.sh
+↓
+Docker Compose
+↓
+Application
+```
+
+## CI
+
+CI запускается автоматически при:
+
+- push
+- pull request
+
+CI проверяет:
+
+- установку зависимостей;
+- запуск Laravel;
+- миграции;
+- подключение PostgreSQL;
+- подключение Redis;
+- code style;
+- static analysis;
+- тесты.
+
+Deployment в production выполняется после успешного CI для main.
+
+## Architecture principles
+
+Проект развивается как модульный Laravel application.
+
+Бизнес-логика должна быть отделена от инфраструктуры и HTTP-слоя.
+
+Основные доменные области:
+
+```
+Identity
+Family
+Teacher
+Geography
+Catalog
+Advertisement
+Response
+Messaging
+Notification
+Moderation
+```
+
+На текущем этапе это модульный монолит, а не набор микросервисов.
+
+Границы доменных областей должны сохраняться таким образом, чтобы при необходимости отдельный домен можно было в будущем
+вынести в самостоятельный сервис.
+
+## MVP scope
+
+В MVP сознательно отсутствуют:
+
+- мобильные приложения;
+- платежи;
+- подписки;
+- сложные чаты;
+- групповые чаты;
+- расписания;
+- документооборот;
+- образовательные программы;
+- автоматический matching;
+- интеграции с внешними образовательными системами;
+- подтверждение личности;
+- рейтинги;
+- отзывы;
+- сложная система модерации.
+
+Основная концепция MVP:
+> Доска объявлений для семейного образования с возможностью связаться через отклик и личные сообщения.
+
+## Future
+
+Возможные направления развития после MVP:
+
+- автоматический matching;
+- полноценное управление учебными группами;
+- расписание;
+- выбор образовательной программы;
+- учёт уроков;
+- документы;
+- договоры;
+- образовательные материалы;
+- расширенная модерация;
+- рейтинги и отзывы;
+- Telegram;
+- монетизация;
+- международная версия;
+- выделение отдельных доменов в микросервисы.
+
+---
+
