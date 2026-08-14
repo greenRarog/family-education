@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: app
       args:
         WWWUSER: "${WWWUSER}"
         WWWGROUP: "${WWWGROUP}"
@@ -22,7 +23,10 @@ services:
       - family-education
 
   nginx:
-    image: nginx:1.29-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
     container_name: family-education-nginx
     restart: unless-stopped
     ports:
