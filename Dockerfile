@@ -84,8 +84,6 @@ CMD ["php-fpm"]
 # ------------------------------------------------------------
 FROM nginx:1.29-alpine AS nginx
 
-COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
-
 COPY public /var/www/html/public
 
 COPY --from=frontend /var/www/html/public/build /var/www/html/public/build
