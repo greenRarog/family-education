@@ -34,10 +34,11 @@ export default function Login() {
         setErrors({});
 
         const newErrors = {};
+        const email = form.email.trim();
 
-        if (!form.email.trim()) {
+        if (!email) {
             newErrors.email = 'Введите email.';
-        } else if (!isValidEmail(form.email.trim())) {
+        } else if (!isValidEmail(email)) {
             newErrors.email = 'Введите корректный email.';
         }
 
@@ -65,7 +66,7 @@ export default function Login() {
                     'X-CSRF-TOKEN': token,
                 },
                 body: new URLSearchParams({
-                    email: form.email.trim(),
+                    email,
                     password: form.password,
                 }),
             });
@@ -79,49 +80,80 @@ export default function Login() {
                 const data = await response.json();
 
                 setErrors(data.errors ?? {
-                    form: 'Неверный email или пароль.',
+                    form: ['Неверный email или пароль.'],
                 });
 
                 return;
             }
 
             setErrors({
-                form: 'Не удалось войти. Попробуйте ещё раз.',
+                form: ['Не удалось войти. Попробуйте ещё раз.'],
             });
         } catch {
             setErrors({
-                form: 'Не удалось соединиться с сервером.',
+                form: ['Не удалось соединиться с сервером.'],
             });
         } finally {
             setIsSubmitting(false);
         }
     }
 
+    function fieldClass(field) {
+        return [
+            'block',
+            'w-full',
+            'rounded-xl',
+            'border',
+            'bg-white',
+            'px-3.5',
+            'py-3',
+            'text-sm',
+            'text-gray-900',
+            'outline-none',
+            'transition',
+            'placeholder:text-gray-400',
+            'disabled:cursor-not-allowed',
+            'disabled:bg-gray-50',
+            errors[field]
+                ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                : 'border-gray-200 focus:border-gray-400 focus:ring-2 focus:ring-gray-100',
+        ].join(' ');
+    }
+
+    function errorMessage(error) {
+        return Array.isArray(error) ? error[0] : error;
+    }
+
     return (
-        <div className="min-h-screen bg-gray-50 px-4 py-12">
-            <div className="mx-auto max-w-md">
-                <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <div className="min-h-screen bg-[#f7f7f8] px-4 py-12 text-gray-900">
+            <div className="mx-auto w-full max-w-md">
+                <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
                     <div className="mb-8 text-center">
-                        <h1 className="text-2xl font-semibold text-gray-900">
+                        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
                             Вход в аккаунт
                         </h1>
 
-                        <p className="mt-2 text-sm text-gray-500">
+                        <p className="mt-2 text-sm leading-6 text-gray-500">
                             Введите данные для входа
                         </p>
                     </div>
 
                     {errors.form && (
-                        <div className="mb-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-                            {errors.form}
+                        <div
+                            className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700">
+                            {errorMessage(errors.form)}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form
+                        onSubmit={handleSubmit}
+                        noValidate
+                        className="space-y-5"
+                    >
                         <div>
                             <label
                                 htmlFor="email"
-                                className="mb-1.5 block text-sm font-medium text-gray-700"
+                                className="mb-2 block text-sm font-medium text-gray-700"
                             >
                                 Email
                             </label>
@@ -135,18 +167,12 @@ export default function Login() {
                                 autoComplete="email"
                                 autoFocus
                                 disabled={isSubmitting}
-                                className={`block w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:ring-2 ${
-                                    errors.email
-                                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-100'
-                                }`}
+                                className={fieldClass('email')}
                             />
 
                             {errors.email && (
                                 <p className="mt-1.5 text-sm text-red-600">
-                                    {Array.isArray(errors.email)
-                                        ? errors.email[0]
-                                        : errors.email}
+                                    {errorMessage(errors.email)}
                                 </p>
                             )}
                         </div>
@@ -154,7 +180,7 @@ export default function Login() {
                         <div>
                             <label
                                 htmlFor="password"
-                                className="mb-1.5 block text-sm font-medium text-gray-700"
+                                className="mb-2 block text-sm font-medium text-gray-700"
                             >
                                 Пароль
                             </label>
@@ -167,18 +193,12 @@ export default function Login() {
                                 onChange={handleChange}
                                 autoComplete="current-password"
                                 disabled={isSubmitting}
-                                className={`block w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:ring-2 ${
-                                    errors.password
-                                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-100'
-                                }`}
+                                className={fieldClass('password')}
                             />
 
                             {errors.password && (
                                 <p className="mt-1.5 text-sm text-red-600">
-                                    {Array.isArray(errors.password)
-                                        ? errors.password[0]
-                                        : errors.password}
+                                    {errorMessage(errors.password)}
                                 </p>
                             )}
                         </div>
@@ -186,17 +206,17 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {isSubmitting ? 'Вход...' : 'Войти'}
                         </button>
                     </form>
 
-                    <div className="mt-6 text-center text-sm text-gray-500">
+                    <div className="mt-6 border-t border-gray-100 pt-6 text-center text-sm text-gray-500">
                         Нет аккаунта?{' '}
                         <a
                             href="/register"
-                            className="font-medium text-blue-600 hover:text-blue-700"
+                            className="font-medium text-gray-900 hover:underline"
                         >
                             Зарегистрироваться
                         </a>
