@@ -36,4 +36,35 @@ class LocationController extends Controller
                 ->get(['id', 'name'])
         );
     }
+
+    public function index(): JsonResponse
+    {
+        return response()->json([
+            'cities' => City::query()
+                ->orderBy('name')
+                ->get(['id', 'name']),
+
+            'districts' => City::query()
+                ->with([
+                    'districts' => fn ($query) => $query
+                        ->orderBy('name')
+                        ->select(['id', 'city_id', 'name']),
+                ])
+                ->get()
+                ->pluck('districts')
+                ->flatten()
+                ->values(),
+
+            'metro_stations' => City::query()
+                ->with([
+                    'metroStations' => fn ($query) => $query
+                        ->orderBy('name')
+                        ->select(['id', 'city_id', 'name']),
+                ])
+                ->get()
+                ->pluck('metroStations')
+                ->flatten()
+                ->values(),
+        ]);
+    }
 }

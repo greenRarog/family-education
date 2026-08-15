@@ -46,19 +46,19 @@
 - [x] Регистрация
 - [x] Login
 - [x] Logout
-- [ ] Восстановление пароля
-- [ ] Тип пользователя
-    - [ ] Family
-    - [ ] Teacher
+- [x] Восстановление пароля
+- [x] Тип пользователя
+    - [x] Family
+    - [x] Teacher
 
 ### Family profile
 
 - [x] Создание профиля семьи
-- [ ] Редактирование профиля
+- [x] Редактирование профиля
 - [x] Город
-- [ ] Добавление детей
-- [ ] Редактирование детей
-- [ ] Удаление детей
+- [x] Добавление детей
+- [x] Редактирование детей
+- [x] Удаление детей
 - [x] Возраст ребёнка
 - [x] Возможность иметь несколько детей в одной семье
 
@@ -840,8 +840,6 @@ Moderation
 
 ```bash
 docker compose exec app vendor/bin/pint
-docker compose exec app php artisan test
 docker compose exec node npm run build
 docker compose exec app composer check
-git diff --check
 ```

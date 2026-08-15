@@ -79,9 +79,12 @@ export default function Home() {
         if (isAuthenticated && user) {
             return (
                 <div className="flex items-center gap-4">
-                    <span className="text-sm text-gray-600">
-                        {user.name}
-                    </span>
+                    <a
+                        href="/family/profile"
+                        className="text-sm text-gray-600 transition hover:text-gray-900"
+                    >
+                        Профиль семьи
+                    </a>
 
                     <button
                         type="button"

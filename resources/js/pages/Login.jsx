@@ -140,7 +140,8 @@ export default function Login() {
 
                     {errors.form && (
                         <div
-                            className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700">
+                            className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700"
+                        >
                             {errorMessage(errors.form)}
                         </div>
                     )}
@@ -201,6 +202,15 @@ export default function Login() {
                                     {errorMessage(errors.password)}
                                 </p>
                             )}
+
+                            <div className="mt-2 text-right">
+                                <a
+                                    href="/forgot-password"
+                                    className="text-sm text-gray-500 transition hover:text-gray-900 hover:underline"
+                                >
+                                    Забыли пароль?
+                                </a>
+                            </div>
                         </div>
 
                         <button
