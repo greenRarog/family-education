@@ -43,9 +43,9 @@
 
 ### Authentication
 
-- [ ] Регистрация
-- [ ] Login
-- [ ] Logout
+- [x] Регистрация
+- [x] Login
+- [x] Logout
 - [ ] Восстановление пароля
 - [ ] Тип пользователя
     - [ ] Family
@@ -53,14 +53,14 @@
 
 ### Family profile
 
-- [ ] Создание профиля семьи
+- [x] Создание профиля семьи
 - [ ] Редактирование профиля
-- [ ] Город
+- [x] Город
 - [ ] Добавление детей
 - [ ] Редактирование детей
 - [ ] Удаление детей
-- [ ] Возраст ребёнка
-- [ ] Возможность иметь несколько детей в одной семье
+- [x] Возраст ребёнка
+- [x] Возможность иметь несколько детей в одной семье
 
 ### Notifications settings
 
@@ -839,11 +839,9 @@ Moderation
 # Проверки перед push в стейдж
 
 ```bash
-docker compose exec app php artisan test
-```
-```bash 
 docker compose exec app vendor/bin/pint
-``` 
-```bash
+docker compose exec app php artisan test
 docker compose exec node npm run build
+docker compose exec app composer check
+git diff --check
 ```
