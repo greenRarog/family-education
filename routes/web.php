@@ -15,13 +15,14 @@ Route::get('/login', function () {
 });
 
 Route::get('/api/user', function () {
-    if (!Auth::check()) {
+    if (! Auth::check()) {
         return response()->json([
             'authenticated' => false,
             'user' => null,
         ]);
     }
     $user = Auth::user();
+
     return response()->json([
         'authenticated' => true,
         'user' => [

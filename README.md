@@ -836,3 +836,14 @@ Moderation
 
 ---
 
+# Проверки перед push в стейдж
+
+```bash
+docker compose exec app php artisan test
+```
+```bash 
+docker compose exec app vendor/bin/pint
+``` 
+```bash
+docker compose exec node npm run build
+```
