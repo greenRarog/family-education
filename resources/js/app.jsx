@@ -1,30 +1,32 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import {createRoot} from 'react-dom/client';
 
 import Register from './pages/Register.jsx';
-
-console.log('0');
+import Login from './pages/Login.jsx';
+import Home from './pages/Home.jsx';
 
 function App() {
-    console.log('111');
+    switch (window.location.pathname) {
+        case '/register':
+            return <Register/>;
 
-    if (window.location.pathname === '/register') {
-        console.log('1');
+        case '/login':
+            return <Login/>;
 
-        return <Register />;
+        case '/':
+            return <Home/>;
+
+        default:
+            return (
+                <div>
+                    <h1>Family Education</h1>
+                </div>
+            );
     }
-
-    console.log('2');
-
-    return (
-        <div>
-            <h1>Family Education</h1>
-        </div>
-    );
 }
 
 const rootElement = document.getElementById('app');
 
 if (rootElement) {
-    createRoot(rootElement).render(<App />);
+    createRoot(rootElement).render(<App/>);
 }
