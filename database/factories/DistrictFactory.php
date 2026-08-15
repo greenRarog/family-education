@@ -19,7 +19,7 @@ class DistrictFactory extends Factory
     {
         return [
             'city_id' => City::factory(),
-            'name' => fake()->unique()->citySuffix(),
+            'name' => $this->faker->unique()->citySuffix(),
         ];
     }
 }

@@ -19,7 +19,7 @@ class MetroStationFactory extends Factory
     {
         return [
             'city_id' => City::factory(),
-            'name' => fake()->unique()->words(2, true),
+            'name' => $this->faker->unique()->words(2, true),
         ];
     }
 }

@@ -18,7 +18,7 @@ class CityFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->unique()->city(),
+            'name' => $this->faker->unique()->city(),
             'fias_id' => (string) Str::uuid(),
         ];
     }

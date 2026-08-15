@@ -20,7 +20,7 @@ class FamilyFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'surname' => fake()->lastName(),
+            'surname' => $this->faker->lastName(),
             'city_id' => City::factory(),
             'district_id' => null,
             'metro_station_id' => null,

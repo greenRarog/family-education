@@ -20,9 +20,9 @@ class ChildFactory extends Factory
     {
         return [
             'family_id' => Family::factory(),
-            'name' => fake()->firstName(),
-            'birth_date' => fake()->dateTimeBetween('-17 years', '-1 year'),
-            'sex' => fake()->randomElement(Sex::cases()),
+            'name' => $this->faker->firstName(),
+            'birth_date' => $this->faker->dateTimeBetween('-17 years', '-1 year'),
+            'sex' => $this->faker->randomElement(Sex::cases()),
         ];
     }
 }
