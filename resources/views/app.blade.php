@@ -6,7 +6,7 @@
     <meta name="turnstile-site-key" content="{{ config('services.turnstile.site_key') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script
-        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
         async
         defer
     ></script>
