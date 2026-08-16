@@ -36,4 +36,8 @@ class BannedWord extends Model
     use HasFactory;
 
     protected $table = 'banned_words';
+
+    protected $fillable = [
+        'word',
+    ];
 }

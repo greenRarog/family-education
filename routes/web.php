@@ -4,6 +4,27 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 
+Route::get('/admin', function () {
+    return view('app');
+});
+Route::get('/admin/users', function () {
+    return view('app');
+});
+Route::get('/admin/subjects', function () {
+    return view('app');
+});
+Route::get('/admin/blocked-terms', function () {
+    return view('app');
+});
+Route::get('/admin/cities', function () {
+    return view('app');
+});
+Route::get('/admin/reports', function () {
+    return view('app');
+});
+Route::get('/admin/advertisements', function () {
+    return view('app');
+});
 Route::get('/family/profile', function () {
     return view('app');
 });

@@ -25,7 +25,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::put('/notification-settings', [NotificationSettingController::class, 'update']);
 });
 
-Route::middleware(['auth', 'admin'])
+Route::middleware(['auth', 'admin', 'web'])
     ->prefix('admin')
     ->group(function () {
         Route::apiResource('cities', CityController::class);
