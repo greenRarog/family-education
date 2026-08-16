@@ -8,25 +8,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('cities', function (Blueprint $table) {
+        Schema::create('banned_words', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('word')->unique();
             $table->timestamps();
-
-            $table->unique('name');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::drop('cities');
+        Schema::drop('banned_words');
     }
 };

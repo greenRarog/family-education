@@ -13,26 +13,28 @@
 
 namespace App\Models{
 /**
- * docker compose exec app php artisan ide-helper:models "App\Models\NotificationSetting"
+ * docker compose exec app php artisan ide-helper:models "App\Models\City"
  *
  * @property int $id
- * @property int $user_id
- * @property bool $email_enabled
- * @property bool $telegram_enabled
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User $user
- * @method static \Database\Factories\NotificationSettingFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationSetting newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationSetting newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationSetting query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationSetting whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationSetting whereEmailEnabled($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationSetting whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationSetting whereTelegramEnabled($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationSetting whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationSetting whereUserId($value)
+ * @property string $name
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, District> $districts
+ * @property-read int|null $districts_count
+ * @property-read Collection<int, Family> $families
+ * @property-read int|null $families_count
+ * @property-read Collection<int, MetroStation> $metroStations
+ * @property-read int|null $metro_stations_count
+ * @method static CityFactory factory($count = null, $state = [])
+ * @method static Builder<static>|City newModelQuery()
+ * @method static Builder<static>|City newQuery()
+ * @method static Builder<static>|City query()
+ * @method static Builder<static>|City whereCreatedAt($value)
+ * @method static Builder<static>|City whereId($value)
+ * @method static Builder<static>|City whereName($value)
+ * @method static Builder<static>|City whereUpdatedAt($value)
+ * @mixin Eloquent
  */
-	class NotificationSetting extends \Eloquent {}
+	class City extends \Eloquent {}
 }
 

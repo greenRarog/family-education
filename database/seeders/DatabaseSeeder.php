@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\UserType;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -17,18 +18,25 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::updateOrCreate(
+            [
+                'email' => 'admin@example.com',
+            ],
+            [
+                'name' => 'Administrator',
+                'password' => 'Admin123!', // todo убрать в .env
+                'user_type' => UserType::ADMIN,
+            ],
+        );
         $this->call([
             CitySeeder::class,
             DistrictSeeder::class,
             MetroStationSeeder::class,
             FamilySeeder::class,
             ChildSeeder::class,
+
+            SubjectSeeder::class,
+            BannedWordSeeder::class,
         ]);
     }
 }

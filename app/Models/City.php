@@ -18,7 +18,6 @@ use Illuminate\Support\Carbon;
  *
  * @property int $id
  * @property string $name
- * @property string $fias_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, District> $districts
@@ -33,7 +32,6 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|City newQuery()
  * @method static Builder<static>|City query()
  * @method static Builder<static>|City whereCreatedAt($value)
- * @method static Builder<static>|City whereFiasId($value)
  * @method static Builder<static>|City whereId($value)
  * @method static Builder<static>|City whereName($value)
  * @method static Builder<static>|City whereUpdatedAt($value)

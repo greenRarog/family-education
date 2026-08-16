@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\v1\Api\Admin\BlockedTermController;
+use App\Http\Controllers\v1\Api\Admin\CityController;
+use App\Http\Controllers\v1\Api\Admin\DistrictController;
+use App\Http\Controllers\v1\Api\Admin\MetroStationController;
+use App\Http\Controllers\v1\Api\Admin\SubjectController;
 use App\Http\Controllers\v1\Api\FamilyController;
 use App\Http\Controllers\v1\Api\LocationController;
 use App\Http\Controllers\v1\Api\NotificationSettingController;
@@ -19,3 +24,13 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/notification-settings', [NotificationSettingController::class, 'show']);
     Route::put('/notification-settings', [NotificationSettingController::class, 'update']);
 });
+
+Route::middleware(['auth', 'admin'])
+    ->prefix('admin')
+    ->group(function () {
+        Route::apiResource('cities', CityController::class);
+        Route::apiResource('districts', DistrictController::class);
+        Route::apiResource('metro-stations', MetroStationController::class);
+        Route::apiResource('subjects', SubjectController::class);
+        Route::apiResource('blocked-terms', BlockedTermController::class);
+    });

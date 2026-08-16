@@ -6,7 +6,6 @@ namespace Database\Factories;
 
 use App\Models\City;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 /**
  * @extends Factory<City>
@@ -19,7 +18,6 @@ class CityFactory extends Factory
     {
         return [
             'name' => $this->faker->unique()->city(),
-            'fias_id' => (string) Str::uuid(),
         ];
     }
 }
