@@ -9,15 +9,23 @@ export default function FamilyProfile() {
         children: [],
     });
 
+    const [notificationSettings, setNotificationSettings] = useState({
+        email_enabled: false,
+        telegram_enabled: false,
+    });
+
     const [cities, setCities] = useState([]);
     const [districts, setDistricts] = useState([]);
     const [metroStations, setMetroStations] = useState([]);
 
     const [errors, setErrors] = useState({});
     const [formError, setFormError] = useState('');
+    const [notificationError, setNotificationError] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isNotificationSubmitting, setIsNotificationSubmitting] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [notificationSaved, setNotificationSaved] = useState(false);
 
     useEffect(() => {
         loadProfile();
@@ -25,7 +33,11 @@ export default function FamilyProfile() {
 
     async function loadProfile() {
         try {
-            const [familyResponse, locationsResponse] = await Promise.all([
+            const [
+                familyResponse,
+                locationsResponse,
+                notificationSettingsResponse,
+            ] = await Promise.all([
                 fetch('/api/family', {
                     headers: {
                         Accept: 'application/json',
@@ -38,15 +50,27 @@ export default function FamilyProfile() {
                     },
                     credentials: 'same-origin',
                 }),
+                fetch('/api/notification-settings', {
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                    credentials: 'same-origin',
+                }),
             ]);
 
-            if (!familyResponse.ok || !locationsResponse.ok) {
+            if (
+                !familyResponse.ok ||
+                !locationsResponse.ok ||
+                !notificationSettingsResponse.ok
+            ) {
                 setFormError('Не удалось загрузить профиль.');
                 return;
             }
 
             const familyData = await familyResponse.json();
             const locationsData = await locationsResponse.json();
+            const notificationSettingsData =
+                await notificationSettingsResponse.json();
 
             const family = familyData.family;
 
@@ -66,6 +90,13 @@ export default function FamilyProfile() {
             setCities(locationsData.cities ?? []);
             setDistricts(locationsData.districts ?? []);
             setMetroStations(locationsData.metro_stations ?? []);
+
+            setNotificationSettings({
+                email_enabled:
+                    notificationSettingsData.email_enabled ?? false,
+                telegram_enabled:
+                    notificationSettingsData.telegram_enabled ?? false,
+            });
         } catch {
             setFormError('Не удалось соединиться с сервером.');
         } finally {
@@ -264,6 +295,79 @@ export default function FamilyProfile() {
             setFormError('Не удалось соединиться с сервером.');
         } finally {
             setIsSubmitting(false);
+        }
+    }
+
+    function handleNotificationChange(event) {
+        const {name, checked} = event.target;
+
+        setNotificationSettings((current) => ({
+            ...current,
+            [name]: checked,
+        }));
+
+        setNotificationSaved(false);
+        setNotificationError('');
+    }
+
+    async function handleNotificationSubmit(event) {
+        event.preventDefault();
+
+        setNotificationError('');
+        setNotificationSaved(false);
+        setIsNotificationSubmitting(true);
+
+        try {
+            const token = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content');
+
+            const response = await fetch('/api/notification-settings', {
+                method: 'PUT',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    email_enabled: notificationSettings.email_enabled,
+                    telegram_enabled:
+                    notificationSettings.telegram_enabled,
+                }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+
+                setNotificationSettings({
+                    email_enabled: data.email_enabled ?? false,
+                    telegram_enabled: data.telegram_enabled ?? false,
+                });
+
+                setNotificationSaved(true);
+                return;
+            }
+
+            if (response.status === 422) {
+                const data = await response.json();
+
+                setNotificationError(
+                    Object.values(data.errors ?? {})
+                        .flat()
+                        .join(' '),
+                );
+
+                return;
+            }
+
+            setNotificationError(
+                'Не удалось сохранить настройки уведомлений.',
+            );
+        } catch {
+            setNotificationError('Не удалось соединиться с сервером.');
+        } finally {
+            setIsNotificationSubmitting(false);
         }
     }
 
@@ -684,6 +788,101 @@ export default function FamilyProfile() {
                             </button>
                         </div>
                     </form>
+
+                    {/* Настройки уведомлений */}
+                    <div className="mt-10 border-t border-gray-100 pt-8">
+                        <div className="mb-6">
+                            <h2 className="text-sm font-medium text-gray-700">
+                                Уведомления
+                            </h2>
+
+                            <p className="mt-1 text-sm leading-6 text-gray-500">
+                                Выберите, куда отправлять уведомления о важных
+                                событиях.
+                            </p>
+                        </div>
+
+                        {notificationError && (
+                            <div
+                                className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700"
+                            >
+                                {notificationError}
+                            </div>
+                        )}
+
+                        {notificationSaved && (
+                            <div
+                                className="mb-6 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-5 text-gray-700"
+                            >
+                                Настройки уведомлений сохранены.
+                            </div>
+                        )}
+
+                        <form
+                            onSubmit={handleNotificationSubmit}
+                            className="space-y-3"
+                        >
+                            <label
+                                className="flex cursor-pointer items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-4 transition hover:bg-gray-100"
+                            >
+                                <div>
+                                    <div className="text-sm font-medium text-gray-900">
+                                        Электронная почта
+                                    </div>
+
+                                    <div className="mt-1 text-sm text-gray-500">
+                                        Получать уведомления на электронную почту.
+                                    </div>
+                                </div>
+
+                                <input
+                                    type="checkbox"
+                                    name="email_enabled"
+                                    checked={notificationSettings.email_enabled}
+                                    onChange={handleNotificationChange}
+                                    disabled={isNotificationSubmitting}
+                                    className="h-5 w-5 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-300"
+                                />
+                            </label>
+
+                            <label
+                                className="flex cursor-pointer items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-4 transition hover:bg-gray-100"
+                            >
+                                <div>
+                                    <div className="text-sm font-medium text-gray-900">
+                                        Telegram
+                                    </div>
+
+                                    <div className="mt-1 text-sm text-gray-500">
+                                        Получать уведомления в Telegram.
+                                    </div>
+                                </div>
+
+                                <input
+                                    type="checkbox"
+                                    name="telegram_enabled"
+                                    checked={
+                                        notificationSettings.telegram_enabled
+                                    }
+                                    onChange={handleNotificationChange}
+                                    disabled={isNotificationSubmitting}
+                                    className="h-5 w-5 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-300"
+                                />
+                            </label>
+
+                            <div className="pt-3">
+                                <button
+                                    type="submit"
+                                    disabled={isNotificationSubmitting}
+                                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {isNotificationSubmitting
+                                        ? 'Сохранение...'
+                                        : 'Сохранить настройки уведомлений'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

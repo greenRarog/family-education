@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\v1\Api\FamilyController;
 use App\Http\Controllers\v1\Api\LocationController;
+use App\Http\Controllers\v1\Api\NotificationSettingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/cities', [LocationController::class, 'cities']);
@@ -14,4 +15,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::put('/family', [FamilyController::class, 'update']);
 
     Route::get('/locations', [LocationController::class, 'index']);
+
+    Route::get('/notification-settings', [NotificationSettingController::class, 'show']);
+    Route::put('/notification-settings', [NotificationSettingController::class, 'update']);
 });
