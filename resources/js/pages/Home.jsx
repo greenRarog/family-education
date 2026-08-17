@@ -86,6 +86,13 @@ export default function Home() {
                         Профиль семьи
                     </a>
 
+                    <a
+                        href="/advertisements"
+                        className="text-sm text-gray-600 transition hover:text-gray-900"
+                    >
+                        Объявления
+                    </a>
+
                     <button
                         type="button"
                         onClick={handleLogout}

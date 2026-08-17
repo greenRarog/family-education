@@ -7,12 +7,15 @@ import Home from './pages/Home.jsx';
 import FamilyProfile from './pages/FamilyProfile.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
+import Advertisements from './pages/Advertisements.jsx';
+import AdvertisementTypeSelector from './pages/AdvertisementTypeSelector.jsx';
+import GroupAdvertisementForm from './pages/GroupAdvertisementForm.jsx';
 
 import AdminLayout from './layouts/AdminLayout.jsx';
 
 import Dashboard from './pages/admin/Dashboard.jsx';
 import Users from './pages/admin/Users.jsx';
-import Advertisements from './pages/admin/Advertisements.jsx';
+import AdminAdvertisements from './pages/admin/Advertisements.jsx';
 import Reports from './pages/admin/Reports.jsx';
 import Cities from './pages/admin/Cities.jsx';
 import Subjects from './pages/admin/Subjects.jsx';
@@ -27,7 +30,7 @@ function AdminPage() {
             return <Users/>;
 
         case '/admin/advertisements':
-            return <Advertisements/>;
+            return <AdminAdvertisements/>;
 
         case '/admin/reports':
             return <Reports/>;
@@ -62,6 +65,15 @@ function App() {
     }
 
     switch (path) {
+        case '/advertisements':
+            return <Advertisements/>;
+
+        case '/advertisements/create':
+            return <AdvertisementTypeSelector/>;
+
+        case '/advertisements/new':
+            return <GroupAdvertisementForm/>;
+
         case '/family/profile':
             return <FamilyProfile/>;
 
@@ -81,6 +93,14 @@ function App() {
             return <Home/>;
 
         default:
+            {
+                const match = path.match(/^\/advertisements\/(\d+)\/edit$/);
+
+                if (match) {
+                    return <GroupAdvertisementForm advertisementId={match[1]}/>;
+                }
+            }
+
             return (
                 <div>
                     <h1>Family Education</h1>

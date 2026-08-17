@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\DatabaseNotification;
@@ -80,5 +81,10 @@ class User extends Authenticatable
     public function notificationSetting(): HasOne
     {
         return $this->hasOne(NotificationSetting::class);
+    }
+
+    public function advertisements(): HasMany
+    {
+        return $this->hasMany(Advertisement::class);
     }
 }

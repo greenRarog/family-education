@@ -28,6 +28,27 @@ Route::get('/admin/advertisements', function () {
 Route::get('/family/profile', function () {
     return view('app');
 });
+Route::get('/advertisements', function () {
+    return view('app');
+});
+Route::get('/advertisements/create', function () {
+    return view('app');
+});
+Route::get('/advertisements/new', function () {
+    return view('app');
+});
+Route::get('/advertisements/{advertisement}/edit', function () {
+    return view('app');
+});
+Route::get('/advertisements', function () {
+    return view('app');
+});
+Route::get('/advertisements/create', function () {
+    return view('app');
+});
+Route::get('/advertisements/{advertisement}/edit', function () {
+    return view('app');
+});
 Route::get('/reset-password/{token}', function () {
     return view('app');
 })->name('password.reset');
@@ -39,7 +60,7 @@ Route::get('/register', function () {
 });
 Route::get('/login', function () {
     return view('app');
-});
+})->name('login');
 Route::get('/api/user', function () {
     if (! Auth::check()) {
         return response()->json([

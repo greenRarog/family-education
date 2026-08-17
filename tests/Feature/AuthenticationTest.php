@@ -148,6 +148,20 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_login_page_has_route_name_required_by_auth_middleware(): void
+    {
+        $this->get('/login')
+            ->assertOk();
+
+        $this->assertSame(url('/login'), route('login'));
+    }
+
+    public function test_guest_logout_redirects_to_login_instead_of_throwing_route_exception(): void
+    {
+        $this->post('/logout')
+            ->assertRedirect(route('login'));
+    }
+
     public function test_authenticated_user_can_get_current_user(): void
     {
         $user = User::factory()->create([

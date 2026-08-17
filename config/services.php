@@ -36,8 +36,18 @@ return [
     ],
 
     'turnstile' => [
-        'site_key' => env('TURNSTILE_SITE_KEY'),
-        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+        'site_key' => env(
+            'TURNSTILE_SITE_KEY',
+            in_array(env('APP_ENV'), ['local', 'testing'], true)
+                ? '1x00000000000000000000AA'
+                : null,
+        ),
+        'secret_key' => env(
+            'TURNSTILE_SECRET_KEY',
+            in_array(env('APP_ENV'), ['local', 'testing'], true)
+                ? '1x0000000000000000000000000000000AA'
+                : null,
+        ),
     ],
 
 ];
