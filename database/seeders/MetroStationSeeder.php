@@ -5,40 +5,46 @@ namespace Database\Seeders;
 use App\Models\City;
 use App\Models\MetroStation;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
+use JsonException;
 
 class MetroStationSeeder extends Seeder
 {
+    private array $except = [
+        'Минск', 'Днепр (Днепропетровск)', 'Харьков', 'Алматы', 'Киев'
+    ];
+
     /**
-     * Run the database seeds.
+     * @throws JsonException
      */
     public function run(): void
     {
-        $moscow = City::where('name', 'Москва')->firstOrFail();
-        $spb = City::where('name', 'Санкт-Петербург')->firstOrFail();
+        MetroStation::truncate();
+        $path = database_path('data/metro.json');
 
-        MetroStation::factory()->create([
-            'city_id' => $moscow->id,
-            'name' => 'Кропоткинская',
-        ]);
+        $metros = json_decode(
+            File::get($path),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
 
-        MetroStation::factory()->create([
-            'city_id' => $moscow->id,
-            'name' => 'Парк культуры',
-        ]);
-
-        MetroStation::factory()->create([
-            'city_id' => $moscow->id,
-            'name' => 'Университет',
-        ]);
-
-        MetroStation::factory()->create([
-            'city_id' => $spb->id,
-            'name' => 'Петроградская',
-        ]);
-
-        MetroStation::factory()->create([
-            'city_id' => $spb->id,
-            'name' => 'Горьковская',
-        ]);
+        foreach ($metros as $metro) {
+            if (in_array($metro['name'], $this->except, true)) {
+                continue;
+            }
+            $city = City::where('name', $metro['name'])->first();
+            if ($city === null) {
+                dd($metro);
+            }
+            foreach ($metro['lines'] as $line) {
+                foreach ($line['stations'] as $station) {
+                    MetroStation::firstOrCreate([
+                        'name' => $station['name'],
+                        'city_id' => $city->id,
+                    ]);
+                }
+            }
+        }
     }
 }

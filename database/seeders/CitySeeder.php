@@ -6,24 +6,30 @@ namespace Database\Seeders;
 
 use App\Models\City;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
+use JsonException;
 
 class CitySeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * @throws JsonException
      */
     public function run(): void
     {
-        City::factory()->create([
-            'name' => 'Москва',
-        ]);
+        City::truncate();
+        $path = database_path('data/russia_cities.json');
 
-        City::factory()->create([
-            'name' => 'Санкт-Петербург',
-        ]);
+        $cities = json_decode(
+            File::get($path),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
 
-        City::factory()->create([
-            'name' => 'Краснодар',
-        ]);
+        foreach ($cities as $city) {
+            City::firstOrCreate([
+                'name' => $city['name'],
+            ]);
+        }
     }
 }
