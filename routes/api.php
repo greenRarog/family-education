@@ -16,10 +16,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/cities', [LocationController::class, 'cities']);
 Route::get('/cities/{city}/districts', [LocationController::class, 'districts']);
 Route::get('/cities/{city}/metro-stations', [LocationController::class, 'metroStations']);
+
+Route::get('/advertisements/feed', [AdvertisementController::class, 'feed']);
+Route::get('/advertisements/{advertisement}', [AdvertisementController::class, 'show']);
+
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/advertisements', [AdvertisementController::class, 'index']);
+    Route::get('/advertisements/{advertisement}/edit', [AdvertisementController::class, 'edit']);
     Route::post('/advertisements', [AdvertisementController::class, 'store']);
-    Route::get('/advertisements/{advertisement}', [AdvertisementController::class, 'show']);
     Route::put('/advertisements/{advertisement}', [AdvertisementController::class, 'update']);
     Route::post('/advertisements/{advertisement}/publish', [AdvertisementController::class, 'publish']);
     Route::post('/advertisements/{advertisement}/close', [AdvertisementController::class, 'close']);

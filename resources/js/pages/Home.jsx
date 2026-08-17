@@ -80,17 +80,24 @@ export default function Home() {
             return (
                 <div className="flex items-center gap-4">
                     <a
-                        href="/family/profile"
-                        className="text-sm text-gray-600 transition hover:text-gray-900"
-                    >
-                        Профиль семьи
-                    </a>
-
-                    <a
                         href="/advertisements"
                         className="text-sm text-gray-600 transition hover:text-gray-900"
                     >
                         Объявления
+                    </a>
+
+                    <a
+                        href="/my-advertisements"
+                        className="text-sm text-gray-600 transition hover:text-gray-900"
+                    >
+                        Мои объявления
+                    </a>
+
+                    <a
+                        href="/family/profile"
+                        className="text-sm text-gray-600 transition hover:text-gray-900"
+                    >
+                        Профиль семьи
                     </a>
 
                     <button
@@ -112,6 +119,13 @@ export default function Home() {
                     className="text-gray-600 transition hover:text-gray-900"
                 >
                     О проекте
+                </a>
+
+                <a
+                    href="/advertisements"
+                    className="text-gray-600 transition hover:text-gray-900"
+                >
+                    Объявления
                 </a>
 
                 <a

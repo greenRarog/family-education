@@ -8,6 +8,7 @@ import FamilyProfile from './pages/FamilyProfile.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import Advertisements from './pages/Advertisements.jsx';
+import MyAdvertisements from './pages/MyAdvertisements.jsx';
 import AdvertisementTypeSelector from './pages/AdvertisementTypeSelector.jsx';
 import GroupAdvertisementForm from './pages/GroupAdvertisementForm.jsx';
 
@@ -65,8 +66,14 @@ function App() {
     }
 
     switch (path) {
+        case '/':
+            return <Home/>;
+
         case '/advertisements':
             return <Advertisements/>;
+
+        case '/my-advertisements':
+            return <MyAdvertisements/>;
 
         case '/advertisements/create':
             return <AdvertisementTypeSelector/>;
@@ -89,16 +96,17 @@ function App() {
         case '/reset-password':
             return <ResetPassword/>;
 
-        case '/':
-            return <Home/>;
+        default: {
+            const editMatch = path.match(/^\/advertisements\/(\d+)\/edit$/);
 
-        default:
-            {
-                const match = path.match(/^\/advertisements\/(\d+)\/edit$/);
+            if (editMatch) {
+                return <GroupAdvertisementForm advertisementId={editMatch[1]}/>;
+            }
 
-                if (match) {
-                    return <GroupAdvertisementForm advertisementId={match[1]}/>;
-                }
+            const advertisementMatch = path.match(/^\/advertisements\/(\d+)$/);
+
+            if (advertisementMatch) {
+                return <Advertisement advertisementId={advertisementMatch[1]}/>;
             }
 
             return (
@@ -106,6 +114,7 @@ function App() {
                     <h1>Family Education</h1>
                 </div>
             );
+        }
     }
 }
 

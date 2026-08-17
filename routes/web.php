@@ -31,6 +31,10 @@ Route::get('/family/profile', function () {
 Route::get('/advertisements', function () {
     return view('app');
 });
+
+Route::get('/my-advertisements', function () {
+    return view('app');
+});
 Route::get('/advertisements/create', function () {
     return view('app');
 });
@@ -39,16 +43,10 @@ Route::get('/advertisements/new', function () {
 });
 Route::get('/advertisements/{advertisement}/edit', function () {
     return view('app');
-});
-Route::get('/advertisements', function () {
+})->whereNumber('advertisement');
+Route::get('/advertisements/{advertisement}', function () {
     return view('app');
-});
-Route::get('/advertisements/create', function () {
-    return view('app');
-});
-Route::get('/advertisements/{advertisement}/edit', function () {
-    return view('app');
-});
+})->whereNumber('advertisement');
 Route::get('/reset-password/{token}', function () {
     return view('app');
 })->name('password.reset');
