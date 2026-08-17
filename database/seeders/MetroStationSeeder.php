@@ -11,7 +11,7 @@ use JsonException;
 class MetroStationSeeder extends Seeder
 {
     private array $except = [
-        'Минск', 'Днепр (Днепропетровск)', 'Харьков', 'Алматы', 'Киев'
+        'Минск', 'Днепр (Днепропетровск)', 'Харьков', 'Алматы', 'Киев',
     ];
 
     /**
