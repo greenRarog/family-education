@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/cities', [LocationController::class, 'cities']);
 Route::get('/cities/{city}/districts', [LocationController::class, 'districts']);
 Route::get('/cities/{city}/metro-stations', [LocationController::class, 'metroStations']);
-
+Route::get('/subjects', [SubjectController::class, 'index']);
 Route::get('/advertisements/feed', [AdvertisementController::class, 'feed']);
 Route::get('/advertisements/{advertisement}', [AdvertisementController::class, 'show']);
 

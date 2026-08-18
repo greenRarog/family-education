@@ -11,6 +11,8 @@ import Advertisements from './pages/Advertisements.jsx';
 import MyAdvertisements from './pages/MyAdvertisements.jsx';
 import AdvertisementTypeSelector from './pages/AdvertisementTypeSelector.jsx';
 import GroupAdvertisementForm from './pages/GroupAdvertisementForm.jsx';
+import FamilyTeacherAdvertisementForm from './pages/FamilyTeacherAdvertisementForm.jsx';
+import AdvertisementEditPage from './pages/AdvertisementEditPage.jsx';
 
 import AdminLayout from './layouts/AdminLayout.jsx';
 
@@ -81,6 +83,9 @@ function App() {
         case '/advertisements/new':
             return <GroupAdvertisementForm/>;
 
+        case '/advertisements/new-teacher':
+            return <FamilyTeacherAdvertisementForm/>;
+
         case '/family/profile':
             return <FamilyProfile/>;
 
@@ -100,13 +105,11 @@ function App() {
             const editMatch = path.match(/^\/advertisements\/(\d+)\/edit$/);
 
             if (editMatch) {
-                return <GroupAdvertisementForm advertisementId={editMatch[1]}/>;
-            }
-
-            const advertisementMatch = path.match(/^\/advertisements\/(\d+)$/);
-
-            if (advertisementMatch) {
-                return <Advertisement advertisementId={advertisementMatch[1]}/>;
+                return (
+                    <AdvertisementEditPage
+                        advertisementId={editMatch[1]}
+                    />
+                );
             }
 
             return (

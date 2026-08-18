@@ -41,9 +41,14 @@ Route::get('/advertisements/create', function () {
 Route::get('/advertisements/new', function () {
     return view('app');
 });
-Route::get('/advertisements/{advertisement}/edit', function () {
+Route::get('/advertisements/new-teacher', function () {
     return view('app');
-})->whereNumber('advertisement');
+});
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('/advertisements/{advertisement}/edit', function () {
+        return view('app');
+    })->whereNumber('advertisement');
+});
 Route::get('/advertisements/{advertisement}', function () {
     return view('app');
 })->whereNumber('advertisement');

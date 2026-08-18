@@ -65,6 +65,10 @@ class AdvertisementController extends Controller
 
             $advertisement->children()->sync($data['child_ids']);
 
+            if ($data['type'] === AdvertisementType::FAMILY_TO_TEACHER->value) {
+                $advertisement->subjects()->sync($data['subject_ids']);
+            }
+
             return $advertisement;
         });
 
@@ -123,7 +127,6 @@ class AdvertisementController extends Controller
         DB::transaction(function () use ($advertisement, $data) {
             $advertisement->update([
                 'type' => $data['type'],
-                'subject' => $data['subject'] ?? null,
                 'format' => $data['format'] ?? null,
                 'city_id' => $data['city_id'],
                 'district_id' => $data['district_id'] ?? null,
@@ -134,6 +137,12 @@ class AdvertisementController extends Controller
             ]);
 
             $advertisement->children()->sync($data['child_ids']);
+
+            if ($data['type'] === AdvertisementType::FAMILY_TO_TEACHER->value) {
+                $advertisement->subjects()->sync($data['subject_ids']);
+            } else {
+                $advertisement->subjects()->detach();
+            }
         });
 
         return response()->json([
@@ -192,6 +201,7 @@ class AdvertisementController extends Controller
     {
         return [
             'children',
+            'subjects',
             'city',
             'district',
             'metroStation',
@@ -200,8 +210,8 @@ class AdvertisementController extends Controller
 
     /**
      * @return array{
-     *     type: AdvertisementType,
-     *     subject: string|null,
+     *     type: string,
+     *     subject_ids?: array<int, int>,
      *     format: string|null,
      *     city_id: int,
      *     district_id: int|null,
@@ -222,11 +232,18 @@ class AdvertisementController extends Controller
                 Rule::enum(AdvertisementType::class),
             ],
 
-            'subject' => [
-                'nullable',
-                'string',
-                'max:255',
-                'required_if:type,'.AdvertisementType::FAMILY_TO_TEACHER->value,
+            'subject_ids' => [
+                Rule::requiredIf(
+                    fn () => $request->input('type') === AdvertisementType::FAMILY_TO_TEACHER->value
+                ),
+                'array',
+            ],
+
+            'subject_ids.*' => [
+                'required',
+                'integer',
+                'distinct',
+                Rule::exists('subjects', 'id'),
             ],
 
             'format' => [

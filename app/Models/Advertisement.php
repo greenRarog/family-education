@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\AdvertisementStatus;
+use App\Enums\AdvertisementStudyFormat;
 use App\Enums\AdvertisementType;
 use Database\Factories\AdvertisementFactory;
-use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,7 +24,7 @@ use Illuminate\Support\Carbon;
  * @property AdvertisementType $type
  * @property AdvertisementStatus $status
  * @property string|null $subject
- * @property string|null $format
+ * @property AdvertisementStudyFormat|null $format
  * @property int $city_id
  * @property int|null $district_id
  * @property int|null $metro_station_id
@@ -40,6 +40,8 @@ use Illuminate\Support\Carbon;
  * @property-read City $city
  * @property-read District|null $district
  * @property-read MetroStation|null $metroStation
+ * @property-read Collection<int, Subject> $subjects
+ * @property-read int|null $subjects_count
  * @property-read User $user
  *
  * @method static AdvertisementFactory factory($count = null, $state = [])
@@ -63,7 +65,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|Advertisement whereUpdatedAt($value)
  * @method static Builder<static>|Advertisement whereUserId($value)
  *
- * @mixin Eloquent
+ * @mixin \Eloquent
  */
 class Advertisement extends Model
 {
@@ -74,7 +76,6 @@ class Advertisement extends Model
         'user_id',
         'type',
         'status',
-        'subject',
         'format',
         'city_id',
         'district_id',
@@ -91,6 +92,7 @@ class Advertisement extends Model
         return [
             'type' => AdvertisementType::class,
             'status' => AdvertisementStatus::class,
+            'format' => AdvertisementStudyFormat::class,
             'published_at' => 'datetime',
             'closed_at' => 'datetime',
         ];
@@ -119,5 +121,10 @@ class Advertisement extends Model
     public function children(): BelongsToMany
     {
         return $this->belongsToMany(Child::class);
+    }
+
+    public function subjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Subject::class);
     }
 }

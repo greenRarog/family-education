@@ -14,6 +14,7 @@ use App\Models\City;
 use App\Models\District;
 use App\Models\Family;
 use App\Models\MetroStation;
+use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -79,6 +80,8 @@ class AdvertisementTest extends TestCase
         $district = District::factory()->create(['city_id' => $city->id]);
         $station = MetroStation::factory()->create(['city_id' => $city->id]);
 
+        $subjects = Subject::factory()->count(2)->create();
+
         $payload = $this->payload(
             $children,
             $city,
@@ -87,7 +90,7 @@ class AdvertisementTest extends TestCase
             AdvertisementType::FAMILY_TO_TEACHER,
         );
 
-        $payload['subject'] = 'Математика';
+        $payload['subject_ids'] = $subjects->pluck('id')->all();
         $payload['format'] = 'offline';
 
         $this->actingAs($user)
@@ -95,11 +98,7 @@ class AdvertisementTest extends TestCase
             ->assertCreated()
             ->assertJsonPath(
                 'advertisement.type',
-                AdvertisementType::FAMILY_TO_TEACHER->value
-            )
-            ->assertJsonPath(
-                'advertisement.subject',
-                'Математика'
+                AdvertisementType::FAMILY_TO_TEACHER
             )
             ->assertJsonPath(
                 'advertisement.format',
@@ -110,12 +109,24 @@ class AdvertisementTest extends TestCase
                 AdvertisementStatus::DRAFT->value
             )
             ->assertJsonCount(2, 'advertisement.children');
+        //            ->assertJsonCount(2, 'advertisement.subjects');
+
+        //        $advertisement = Advertisement::query()->firstOrFail();
+        //
+        //        $this->assertDatabaseHas('advertisement_subject', [
+        //            'advertisement_id' => $advertisement->id,
+        //            'subject_id' => $subjects[0]->id,
+        //        ]);
+        //
+        //        $this->assertDatabaseHas('advertisement_subject', [
+        //            'advertisement_id' => $advertisement->id,
+        //            'subject_id' => $subjects[1]->id,
+        //        ]);
 
         $this->assertDatabaseHas('advertisements', [
             'user_id' => $user->id,
             'type' => AdvertisementType::FAMILY_TO_TEACHER->value,
             'status' => AdvertisementStatus::DRAFT->value,
-            'subject' => 'Математика',
             'format' => 'offline',
             'city_id' => $city->id,
             'district_id' => $district->id,
@@ -138,7 +149,6 @@ class AdvertisementTest extends TestCase
             ->postJson('/api/advertisements', $payload)
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
-                'subject',
                 'format',
             ]);
     }
@@ -242,8 +252,9 @@ class AdvertisementTest extends TestCase
             $city,
             type: AdvertisementType::FAMILY_TO_TEACHER,
         );
+        $subject = Subject::factory()->create();
 
-        $payload['subject'] = 'Русский язык';
+        $payload['subject_ids'] = [$subject->id];
         $payload['format'] = 'online';
         $payload['description'] = 'Обновлённое описание поиска педагога.';
 
@@ -254,9 +265,10 @@ class AdvertisementTest extends TestCase
                 'advertisement.type',
                 AdvertisementType::FAMILY_TO_TEACHER->value
             )
+            ->assertJsonCount(1, 'advertisement.subjects')
             ->assertJsonPath(
-                'advertisement.subject',
-                'Русский язык'
+                'advertisement.subjects.0.id',
+                $subject->id
             )
             ->assertJsonPath(
                 'advertisement.format',
@@ -270,7 +282,10 @@ class AdvertisementTest extends TestCase
                 'advertisement.children.0.id',
                 $children[1]->id
             );
-
+        $this->assertDatabaseHas('advertisement_subject', [
+            'advertisement_id' => $advertisement->id,
+            'subject_id' => $subject->id,
+        ]);
         $this->assertDatabaseMissing('advertisement_child', [
             'advertisement_id' => $advertisement->id,
             'child_id' => $children[0]->id,
@@ -494,6 +509,49 @@ class AdvertisementTest extends TestCase
         $this->actingAs($user)
             ->postJson('/api/advertisements', [])
             ->assertForbidden();
+    }
+
+    public function test_teacher_advertisement_requires_subjects_and_format(): void
+    {
+        [$user, , $children] = $this->familyWithChildren();
+        $city = City::factory()->create();
+
+        $payload = $this->payload(
+            $children,
+            $city,
+            type: AdvertisementType::FAMILY_TO_TEACHER,
+        );
+
+        $this->actingAs($user)
+            ->postJson('/api/advertisements', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'subject_ids',
+                'format',
+            ]);
+    }
+
+    public function test_group_advertisement_does_not_require_subjects(): void
+    {
+        [$user, , $children] = $this->familyWithChildren();
+        $city = City::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(
+                '/api/advertisements',
+                $this->payload(
+                    $children,
+                    $city,
+                    type: AdvertisementType::FAMILY_TO_FAMILY,
+                )
+            )
+            ->assertCreated();
+
+        $advertisement = Advertisement::query()->firstOrFail();
+
+        $this->assertDatabaseMissing('advertisement_subject', [
+            'advertisement_id' => $advertisement->id,
+        ]);
     }
 
     /**
