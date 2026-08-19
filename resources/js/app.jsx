@@ -67,6 +67,10 @@ function App() {
         );
     }
 
+    if (path === '/reset-password' || path.startsWith('/reset-password/')) {
+        return <ResetPassword/>;
+    }
+
     switch (path) {
         case '/':
             return <Home/>;
@@ -97,9 +101,6 @@ function App() {
 
         case '/forgot-password':
             return <ForgotPassword/>;
-
-        case '/reset-password':
-            return <ResetPassword/>;
 
         default: {
             const editMatch = path.match(/^\/advertisements\/(\d+)\/edit$/);
