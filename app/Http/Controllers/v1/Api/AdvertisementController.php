@@ -23,9 +23,7 @@ class AdvertisementController extends Controller
 {
     public function __construct(
         private readonly BannedWordChecker $bannedWordChecker,
-    )
-    {
-    }
+    ) {}
 
     public function feed(): JsonResponse
     {
@@ -81,10 +79,9 @@ class AdvertisementController extends Controller
     }
 
     public function show(
-        Request       $request,
+        Request $request,
         Advertisement $advertisement
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $isOwner = $request->user()?->id === $advertisement->user_id;
 
         abort_unless(
@@ -98,10 +95,9 @@ class AdvertisementController extends Controller
     }
 
     public function edit(
-        Request       $request,
+        Request $request,
         Advertisement $advertisement
-    ): JsonResponse
-    {
+    ): JsonResponse {
         abort_unless(
             $advertisement->user_id === $request->user()->id,
             404
@@ -116,10 +112,9 @@ class AdvertisementController extends Controller
      * @throws ValidationException
      */
     public function update(
-        Request       $request,
+        Request $request,
         Advertisement $advertisement
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->ensureOwner($request, $advertisement);
 
         if ($advertisement->status === AdvertisementStatus::CLOSED) {
@@ -157,10 +152,9 @@ class AdvertisementController extends Controller
     }
 
     public function publish(
-        Request       $request,
+        Request $request,
         Advertisement $advertisement
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->ensureOwner($request, $advertisement);
 
         if ($advertisement->status !== AdvertisementStatus::DRAFT) {
@@ -180,10 +174,9 @@ class AdvertisementController extends Controller
     }
 
     public function close(
-        Request       $request,
+        Request $request,
         Advertisement $advertisement
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->ensureOwner($request, $advertisement);
 
         if ($advertisement->status === AdvertisementStatus::CLOSED) {
@@ -242,7 +235,7 @@ class AdvertisementController extends Controller
 
             'subject_ids' => [
                 Rule::requiredIf(
-                    fn() => $request->input('type') === AdvertisementType::FAMILY_TO_TEACHER->value
+                    fn () => $request->input('type') === AdvertisementType::FAMILY_TO_TEACHER->value
                 ),
                 'array',
             ],
@@ -257,7 +250,7 @@ class AdvertisementController extends Controller
             'format' => [
                 'nullable',
                 'max:50',
-                'required_if:type,' . AdvertisementType::FAMILY_TO_TEACHER->value,
+                'required_if:type,'.AdvertisementType::FAMILY_TO_TEACHER->value,
                 Rule::enum(AdvertisementStudyFormat::class),
             ],
 
@@ -316,7 +309,7 @@ class AdvertisementController extends Controller
         $family = $request->user()->family;
 
         if (
-            !$family ||
+            ! $family ||
             $family->children()
                 ->whereIn('id', $data['child_ids'])
                 ->count() !== count($data['child_ids'])
@@ -328,7 +321,7 @@ class AdvertisementController extends Controller
 
         if (
             isset($data['district_id']) &&
-            !District::query()
+            ! District::query()
                 ->whereKey($data['district_id'])
                 ->where('city_id', $data['city_id'])
                 ->exists()
@@ -340,7 +333,7 @@ class AdvertisementController extends Controller
 
         if (
             isset($data['metro_station_id']) &&
-            !MetroStation::query()
+            ! MetroStation::query()
                 ->whereKey($data['metro_station_id'])
                 ->where('city_id', $data['city_id'])
                 ->exists()
@@ -369,10 +362,9 @@ class AdvertisementController extends Controller
     }
 
     private function ensureOwner(
-        Request       $request,
+        Request $request,
         Advertisement $advertisement
-    ): void
-    {
+    ): void {
         abort_unless(
             $advertisement->user_id === $request->user()->id,
             403

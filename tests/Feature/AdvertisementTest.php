@@ -397,9 +397,9 @@ class AdvertisementTest extends TestCase
         $this->actingAs($owner)
             ->getJson('/api/advertisements/feed')
             ->assertOk()
-            ->assertJsonCount(1, 'advertisements')
+            ->assertJsonCount(1, 'advertisements.data')
             ->assertJsonPath(
-                'advertisements.0.id',
+                'advertisements.data.0.id',
                 $published->id
             );
     }
