@@ -8,6 +8,7 @@ import FamilyProfile from './pages/FamilyProfile.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import Advertisements from './pages/Advertisements.jsx';
+import AdvertisementShow from './pages/AdvertisementShow.jsx';
 import MyAdvertisements from './pages/MyAdvertisements.jsx';
 import AdvertisementTypeSelector from './pages/AdvertisementTypeSelector.jsx';
 import GroupAdvertisementForm from './pages/GroupAdvertisementForm.jsx';
@@ -109,6 +110,16 @@ function App() {
                 return (
                     <AdvertisementEditPage
                         advertisementId={editMatch[1]}
+                    />
+                );
+            }
+
+            const showMatch = path.match(/^\/advertisements\/(\d+)$/);
+
+            if (showMatch) {
+                return (
+                    <AdvertisementShow
+                        advertisementId={showMatch[1]}
                     />
                 );
             }

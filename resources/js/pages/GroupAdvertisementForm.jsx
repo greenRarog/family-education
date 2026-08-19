@@ -28,7 +28,7 @@ export default function GroupAdvertisementForm({advertisementId = null}) {
                     fetch('/api/family', {headers: {Accept: 'application/json'}, credentials: 'same-origin'}),
                     fetch('/api/locations', {headers: {Accept: 'application/json'}, credentials: 'same-origin'}),
                 ];
-                if (advertisementId) requests.push(fetch(`/api/advertisements/${advertisementId}`, {
+                if (advertisementId) requests.push(fetch(`/api/advertisements/${advertisementId}/edit`, {
                     headers: {Accept: 'application/json'},
                     credentials: 'same-origin'
                 }));

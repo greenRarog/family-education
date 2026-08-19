@@ -61,7 +61,7 @@ export default function FamilyTeacherAdvertisementForm({
 
                 if (advertisementId) {
                     requests.push(
-                        fetch(`/api/advertisements/${advertisementId}`, {
+                        fetch(`/api/advertisements/${advertisementId}/edit`, {
                             headers: {Accept: 'application/json'},
                             credentials: 'same-origin',
                         })
