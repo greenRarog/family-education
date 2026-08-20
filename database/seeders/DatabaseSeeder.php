@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
 
             SubjectSeeder::class,
             BannedWordSeeder::class,
+            AdvertisementSeeder::class,
         ]);
     }
 }

@@ -17,9 +17,11 @@ Route::get('/cities', [LocationController::class, 'cities']);
 Route::get('/cities/{city}/districts', [LocationController::class, 'districts']);
 Route::get('/cities/{city}/metro-stations', [LocationController::class, 'metroStations']);
 Route::get('/subjects', [SubjectController::class, 'index']);
-Route::get('/advertisements/feed', [AdvertisementController::class, 'feed']);
-Route::get('/advertisements/{advertisement}', [AdvertisementController::class, 'show']);
 
+Route::middleware('web')->group(function () {
+    Route::get('/advertisements/feed', [AdvertisementController::class, 'feed']);
+    Route::get('/advertisements/{advertisement}', [AdvertisementController::class, 'show']);
+});
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/advertisements', [AdvertisementController::class, 'index']);
     Route::get('/advertisements/{advertisement}/edit', [AdvertisementController::class, 'edit']);
@@ -27,6 +29,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::put('/advertisements/{advertisement}', [AdvertisementController::class, 'update']);
     Route::post('/advertisements/{advertisement}/publish', [AdvertisementController::class, 'publish']);
     Route::post('/advertisements/{advertisement}/close', [AdvertisementController::class, 'close']);
+    Route::post('/advertisements/{advertisement}/responses', [AdvertisementController::class, 'respond']);
 
     Route::get('/family', [FamilyController::class, 'show']);
     Route::put('/family', [FamilyController::class, 'update']);

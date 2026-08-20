@@ -554,6 +554,124 @@ class AdvertisementTest extends TestCase
         ]);
     }
 
+    public function test_public_feed_can_filter_advertisements_by_type(): void
+    {
+        [$owner] = $this->familyWithChildren();
+
+        $familyAdvertisement = Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'type' => AdvertisementType::FAMILY_TO_FAMILY,
+            'status' => AdvertisementStatus::PUBLISHED,
+            'published_at' => now(),
+        ]);
+
+        $teacherAdvertisement = Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'type' => AdvertisementType::FAMILY_TO_TEACHER,
+            'status' => AdvertisementStatus::PUBLISHED,
+            'published_at' => now(),
+        ]);
+
+        $this->getJson('/api/advertisements/feed?type='.AdvertisementType::FAMILY_TO_TEACHER->value)
+            ->assertOk()
+            ->assertJsonCount(1, 'advertisements.data')
+            ->assertJsonPath(
+                'advertisements.data.0.id',
+                $teacherAdvertisement->id
+            )
+            ->assertJsonMissing([
+                'id' => $familyAdvertisement->id,
+            ]);
+    }
+
+    public function test_public_feed_can_filter_advertisements_by_city(): void
+    {
+        [$owner] = $this->familyWithChildren();
+
+        $firstCity = City::factory()->create();
+        $secondCity = City::factory()->create();
+
+        $firstAdvertisement = Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'city_id' => $firstCity->id,
+            'status' => AdvertisementStatus::PUBLISHED,
+            'published_at' => now(),
+        ]);
+
+        $secondAdvertisement = Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'city_id' => $secondCity->id,
+            'status' => AdvertisementStatus::PUBLISHED,
+            'published_at' => now(),
+        ]);
+
+        $this->getJson("/api/advertisements/feed?city_id={$firstCity->id}")
+            ->assertOk()
+            ->assertJsonCount(1, 'advertisements.data')
+            ->assertJsonPath(
+                'advertisements.data.0.id',
+                $firstAdvertisement->id
+            );
+    }
+
+    public function test_public_feed_can_filter_advertisements_by_age(): void
+    {
+        [$owner] = $this->familyWithChildren();
+
+        $matchingAdvertisement = Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'participant_age_from' => 7,
+            'participant_age_to' => 10,
+            'status' => AdvertisementStatus::PUBLISHED,
+            'published_at' => now(),
+        ]);
+
+        $nonMatchingAdvertisement = Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'participant_age_from' => 11,
+            'participant_age_to' => 14,
+            'status' => AdvertisementStatus::PUBLISHED,
+            'published_at' => now(),
+        ]);
+
+        $this->getJson('/api/advertisements/feed?age=8')
+            ->assertOk()
+            ->assertJsonCount(1, 'advertisements.data')
+            ->assertJsonPath(
+                'advertisements.data.0.id',
+                $matchingAdvertisement->id
+            );
+    }
+
+    public function test_public_feed_can_filter_advertisements_by_subject(): void
+    {
+        [$owner] = $this->familyWithChildren();
+        $firstSubject = Subject::factory()->create();
+        $secondSubject = Subject::factory()->create();
+        $matchingAdvertisement = Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'type' => AdvertisementType::FAMILY_TO_TEACHER,
+            'status' => AdvertisementStatus::PUBLISHED,
+            'published_at' => now(),
+        ]);
+        $nonMatchingAdvertisement = Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'type' => AdvertisementType::FAMILY_TO_TEACHER,
+            'status' => AdvertisementStatus::PUBLISHED,
+            'published_at' => now(),
+        ]);
+        $matchingAdvertisement->subjects()->attach($firstSubject);
+        $nonMatchingAdvertisement->subjects()->attach($secondSubject);
+
+        $this->getJson("/api/advertisements/feed?subject_id={$firstSubject->id}")
+            ->assertOk()
+            ->assertJsonCount(1, 'advertisements.data')
+            ->assertJsonPath(
+                'advertisements.data.0.id',
+                $matchingAdvertisement->id
+            );
+    }
+
     /**
      * @return array{0: User, 1: Family, 2: array<int, Child>}
      */

@@ -11,6 +11,7 @@ use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -32,7 +33,12 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property UserType $user_type
+ * @property-read Collection<int, AdvertisementResponse> $advertisementResponses
+ * @property-read int|null $advertisement_responses_count
+ * @property-read Collection<int, Advertisement> $advertisements
+ * @property-read int|null $advertisements_count
  * @property-read Family|null $family
+ * @property-read NotificationSetting|null $notificationSetting
  * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  *
@@ -86,5 +92,10 @@ class User extends Authenticatable
     public function advertisements(): HasMany
     {
         return $this->hasMany(Advertisement::class);
+    }
+
+    public function advertisementResponses(): HasMany
+    {
+        return $this->hasMany(AdvertisementResponse::class);
     }
 }

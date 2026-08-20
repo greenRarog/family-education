@@ -13,8 +13,11 @@ const formats = {
 
 export default function AdvertisementShow({advertisementId}) {
     const [advertisement, setAdvertisement] = useState(null);
+    const [viewer, setViewer] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isResponding, setIsResponding] = useState(false);
     const [error, setError] = useState('');
+    const [responseError, setResponseError] = useState('');
 
     useEffect(() => {
         fetch(`/api/advertisements/${advertisementId}`, {
@@ -32,6 +35,7 @@ export default function AdvertisementShow({advertisementId}) {
             })
             .then((data) => {
                 setAdvertisement(data.advertisement);
+                setViewer(data.viewer);
             })
             .catch(() => {
                 setError('Не удалось загрузить объявление.');
@@ -40,6 +44,120 @@ export default function AdvertisementShow({advertisementId}) {
                 setIsLoading(false);
             });
     }, [advertisementId]);
+
+    const handleRespond = async () => {
+        if (
+            !viewer?.authenticated ||
+            viewer.is_owner ||
+            viewer.has_responded ||
+            isResponding
+        ) {
+            return;
+        }
+
+        setIsResponding(true);
+        setResponseError('');
+
+        try {
+            const response = await fetch(
+                `/api/advertisements/${advertisementId}/responses`,
+                {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                    credentials: 'same-origin',
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || 'Не удалось отправить отклик.'
+                );
+            }
+
+            setViewer((current) => ({
+                ...current,
+                has_responded: true,
+            }));
+        } catch (error) {
+            setResponseError(
+                error.message || 'Не удалось отправить отклик.'
+            );
+        } finally {
+            setIsResponding(false);
+        }
+    };
+
+    const renderAction = () => {
+        if (!viewer) {
+            return null;
+        }
+
+        if (viewer.is_owner) {
+            return (
+                <a
+                    href={`/advertisements/${advertisement.id}/edit`}
+                    className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+                >
+                    Редактировать
+                </a>
+            );
+        }
+
+        if (viewer.has_responded) {
+            return (
+                <button
+                    type="button"
+                    disabled
+                    className="inline-flex cursor-not-allowed items-center justify-center rounded-lg bg-green-50 px-5 py-2.5 text-sm font-medium text-green-700"
+                >
+                    ✓ Вы откликнулись
+                </button>
+            );
+        }
+
+        if (viewer.authenticated) {
+            return (
+                <button
+                    type="button"
+                    disabled={isResponding}
+                    onClick={handleRespond}
+                    className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    {isResponding ? 'Отправка...' : 'Отозваться'}
+                </button>
+            );
+        }
+
+        return (
+            <div className="flex items-center gap-2">
+                <button
+                    type="button"
+                    disabled
+                    className="inline-flex cursor-not-allowed items-center justify-center rounded-lg bg-gray-100 px-5 py-2.5 text-sm font-medium text-gray-400"
+                >
+                    Отозваться
+                </button>
+
+                <div className="group relative">
+        <span
+            className="flex h-6 w-6 cursor-help items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500"
+        >
+            ?
+        </span>
+
+                    <div
+                        className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-64 -translate-x-1/2 rounded-lg bg-gray-900 px-3 py-2 text-center text-xs leading-5 text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100"
+                    >
+                        Для отклика на объявления необходимо зарегистрироваться.
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     if (isLoading) {
         return (
@@ -163,6 +281,16 @@ export default function AdvertisementShow({advertisementId}) {
                         <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-700">
                             {advertisement.description}
                         </p>
+                    </div>
+
+                    <div className="mt-6 border-t border-gray-100 pt-6">
+                        {renderAction()}
+
+                        {responseError && (
+                            <p className="mt-3 text-sm text-red-600">
+                                {responseError}
+                            </p>
+                        )}
                     </div>
                 </article>
             </main>

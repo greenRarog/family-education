@@ -10,6 +10,7 @@ use App\Enums\AdvertisementType;
 use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\Advertisement;
+use App\Models\AdvertisementResponse;
 use App\Models\District;
 use App\Models\MetroStation;
 use App\Services\BannedWordChecker;
@@ -25,12 +26,47 @@ class AdvertisementController extends Controller
         private readonly BannedWordChecker $bannedWordChecker,
     ) {}
 
-    public function feed(): JsonResponse
+    public function feed(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'type' => ['nullable', Rule::enum(AdvertisementType::class)],
+            'city_id' => ['nullable', 'integer', 'exists:cities,id'],
+            'age' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'subject_id' => ['nullable', 'integer', 'exists:subjects,id'],
+            'format' => ['nullable', Rule::enum(AdvertisementStudyFormat::class)],
+        ]);
+
+        $query = Advertisement::query()
+            ->where('status', AdvertisementStatus::PUBLISHED)
+            ->with($this->relations());
+
+        if (! empty($validated['type'])) {
+            $query->where('type', $validated['type']);
+        }
+
+        if (! empty($validated['format'])) {
+            $query->where('format', $validated['format']);
+        }
+
+        if (! empty($validated['city_id'])) {
+            $query->where('city_id', $validated['city_id']);
+        }
+
+        if (isset($validated['age'])) {
+            $age = $validated['age'];
+
+            $query->where('participant_age_from', '<=', $age)
+                ->where('participant_age_to', '>=', $age);
+        }
+
+        if (! empty($validated['subject_id'])) {
+            $query->whereHas('subjects', function ($query) use ($validated) {
+                $query->where('subjects.id', $validated['subject_id']);
+            });
+        }
+
         return response()->json([
-            'advertisements' => Advertisement::query()
-                ->where('status', AdvertisementStatus::PUBLISHED)
-                ->with($this->relations())
+            'advertisements' => $query
                 ->latest('published_at')
                 ->paginate(20),
         ]);
@@ -78,19 +114,32 @@ class AdvertisementController extends Controller
         ], 201);
     }
 
-    public function show(
-        Request $request,
-        Advertisement $advertisement
-    ): JsonResponse {
-        $isOwner = $request->user()?->id === $advertisement->user_id;
+    public function show(Advertisement $advertisement): JsonResponse
+    {
+        $user = auth()->user();
 
-        abort_unless(
-            $advertisement->status === AdvertisementStatus::PUBLISHED || $isOwner,
-            404
-        );
+        $isOwner = $user?->id === $advertisement->user_id;
+
+        $hasResponded = $user !== null
+            && ! $isOwner
+            && $advertisement->responses()
+                ->where('user_id', $user->id)
+                ->exists();
+
+        if (
+            $advertisement->status !== AdvertisementStatus::PUBLISHED
+            && ! $isOwner
+        ) {
+            abort(404);
+        }
 
         return response()->json([
             'advertisement' => $advertisement->load($this->relations()),
+            'viewer' => [
+                'authenticated' => $user !== null,
+                'is_owner' => $isOwner,
+                'has_responded' => $hasResponded,
+            ],
         ]);
     }
 
@@ -193,6 +242,36 @@ class AdvertisementController extends Controller
         return response()->json([
             'advertisement' => $advertisement->fresh()->load($this->relations()),
         ]);
+    }
+
+    public function respond(Advertisement $advertisement): JsonResponse
+    {
+        $user = auth()->user();
+
+        if ($advertisement->status !== AdvertisementStatus::PUBLISHED) {
+            abort(404);
+        }
+
+        if ($advertisement->user_id === $user->id) {
+            return response()->json([
+                'message' => 'Нельзя откликнуться на собственное объявление.',
+            ], 422);
+        }
+
+        $response = AdvertisementResponse::query()->firstOrCreate([
+            'advertisement_id' => $advertisement->id,
+            'user_id' => $user->id,
+        ]);
+
+        if (! $response->wasRecentlyCreated) {
+            return response()->json([
+                'message' => 'Вы уже откликались на это объявление.',
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Отклик отправлен.',
+        ], 201);
     }
 
     /**

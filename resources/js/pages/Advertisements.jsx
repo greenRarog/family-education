@@ -1,4 +1,13 @@
 import {useEffect, useState} from 'react';
+import AdvertisementFilters from '../components/advertisements/AdvertisementFilters';
+
+const initialFilters = {
+    type: '',
+    city_id: '',
+    age: '',
+    subject_id: '',
+    format: '',
+};
 
 const types = {
     family_to_family: 'Ищу участников в учебную группу',
@@ -11,12 +20,37 @@ export default function Advertisements() {
     const [error, setError] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
+    const [filters, setFilters] = useState(initialFilters);
 
     useEffect(() => {
         setIsLoading(true);
         setError('');
 
-        fetch(`/api/advertisements/feed?page=${currentPage}`, {
+        const params = new URLSearchParams();
+
+        params.set('page', currentPage);
+
+        if (filters.type) {
+            params.set('type', filters.type);
+        }
+
+        if (filters.city_id) {
+            params.set('city_id', filters.city_id);
+        }
+
+        if (filters.age) {
+            params.set('age', filters.age);
+        }
+
+        if (filters.subject_id) {
+            params.set('subject_id', filters.subject_id);
+        }
+
+        if (filters.format) {
+            params.set('format', filters.format);
+        }
+
+        fetch(`/api/advertisements/feed?${params.toString()}`, {
             headers: {
                 Accept: 'application/json',
             },
@@ -42,7 +76,32 @@ export default function Advertisements() {
             .finally(() => {
                 setIsLoading(false);
             });
-    }, [currentPage]);
+    }, [
+        currentPage,
+        filters.type,
+        filters.city_id,
+        filters.age,
+        filters.subject_id,
+        filters.format,
+    ]);
+
+    const handleFilterChange = (name, value) => {
+        setFilters((current) => ({
+            ...current,
+            [name]: value,
+        }));
+
+        setCurrentPage(1);
+    };
+
+    const resetFilters = () => {
+        setFilters(initialFilters);
+        setCurrentPage(1);
+    };
+
+    const hasActiveFilters = Object.values(filters).some(
+        (value) => value !== ''
+    );
 
     return (
         <div className="min-h-screen bg-[#f7f7f8] px-4 py-12 text-gray-900">
@@ -63,6 +122,14 @@ export default function Advertisements() {
                         Найдите семьи и педагогов для совместного обучения.
                     </p>
                 </div>
+
+                <AdvertisementFilters
+                    filters={filters}
+                    types={types}
+                    onChange={handleFilterChange}
+                    onReset={resetFilters}
+                    hasActiveFilters={hasActiveFilters}
+                />
 
                 {error && (
                     <p className="mt-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">

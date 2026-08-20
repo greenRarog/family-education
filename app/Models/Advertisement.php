@@ -8,12 +8,14 @@ use App\Enums\AdvertisementStatus;
 use App\Enums\AdvertisementStudyFormat;
 use App\Enums\AdvertisementType;
 use Database\Factories\AdvertisementFactory;
+use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -40,6 +42,8 @@ use Illuminate\Support\Carbon;
  * @property-read City $city
  * @property-read District|null $district
  * @property-read MetroStation|null $metroStation
+ * @property-read Collection<int, AdvertisementResponse> $responses
+ * @property-read int|null $responses_count
  * @property-read Collection<int, Subject> $subjects
  * @property-read int|null $subjects_count
  * @property-read User $user
@@ -65,7 +69,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|Advertisement whereUpdatedAt($value)
  * @method static Builder<static>|Advertisement whereUserId($value)
  *
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class Advertisement extends Model
 {
@@ -126,5 +130,10 @@ class Advertisement extends Model
     public function subjects(): BelongsToMany
     {
         return $this->belongsToMany(Subject::class);
+    }
+
+    public function responses(): HasMany
+    {
+        return $this->hasMany(AdvertisementResponse::class);
     }
 }
