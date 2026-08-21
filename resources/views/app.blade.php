@@ -10,6 +10,11 @@
         async
         defer
     ></script>
+    <script>
+        window.App = {
+            user: @json(auth()->user()),
+        };
+    </script>
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
 </head>

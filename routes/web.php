@@ -49,6 +49,12 @@ Route::middleware(['web', 'auth'])->group(function () {
         return view('app');
     })->whereNumber('advertisement');
 });
+Route::get('/conversations/{conversation}', function () {
+    return view('app');
+})->whereNumber('conversation');
+Route::get('/conversations', function () {
+    return view('app');
+});
 Route::get('/advertisements/{advertisement}', function () {
     return view('app');
 })->whereNumber('advertisement');

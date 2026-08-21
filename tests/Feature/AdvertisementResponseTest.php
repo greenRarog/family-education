@@ -238,6 +238,7 @@ class AdvertisementResponseTest extends TestCase
     {
         [$owner] = $this->familyWithUser();
         [$user] = $this->familyWithUser();
+
         $advertisement = Advertisement::factory()->create([
             'user_id' => $owner->id,
             'status' => AdvertisementStatus::PUBLISHED,
@@ -246,13 +247,41 @@ class AdvertisementResponseTest extends TestCase
         $response = AdvertisementResponse::factory()->create([
             'advertisement_id' => $advertisement->id,
             'user_id' => $user->id,
-            'status' => AdvertisementResponseStatus::ACCEPTED,
+            'status' => AdvertisementResponseStatus::REJECTED,
         ]);
+
         $this->actingAs($owner)
             ->postJson(
                 "/api/advertisement-responses/{$response->id}/reject"
             )
             ->assertUnprocessable();
+    }
+
+    public function test_owner_can_reject_accepted_response(): void
+    {
+        [$owner] = $this->familyWithUser();
+        [$user] = $this->familyWithUser();
+        $advertisement = Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'status' => AdvertisementStatus::PUBLISHED,
+        ]);
+        $response = AdvertisementResponse::factory()->create([
+            'advertisement_id' => $advertisement->id,
+            'user_id' => $user->id,
+            'status' => AdvertisementResponseStatus::ACCEPTED,
+        ]);
+
+        $this->actingAs($owner)
+            ->postJson("/api/advertisement-responses/{$response->id}/reject")
+            ->assertOk()
+            ->assertJsonPath(
+                'response.status',
+                AdvertisementResponseStatus::REJECTED->value
+            );
+        $this->assertDatabaseHas('advertisement_responses', [
+            'id' => $response->id,
+            'status' => AdvertisementResponseStatus::REJECTED->value,
+        ]);
     }
 
     /**

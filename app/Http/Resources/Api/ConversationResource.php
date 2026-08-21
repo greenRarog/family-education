@@ -36,6 +36,12 @@ class ConversationResource extends JsonResource
             'messages' => MessageResource::collection(
                 $this->whenLoaded('messages')
             ),
+            'viewer' => [
+                'id' => $request->user()?->id,
+                'is_advertisement_owner' => $advertisement->user_id === $request->user()?->id,
+                'is_response_author' => $response->user_id === $request->user()?->id,
+            ],
+            'has_unread_messages' => (bool) $r->getAttribute('has_unread_messages'),
             'created_at' => $r->created_at,
             'updated_at' => $r->updated_at,
         ];

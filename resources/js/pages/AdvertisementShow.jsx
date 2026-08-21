@@ -18,6 +18,12 @@ export default function AdvertisementShow({advertisementId}) {
     const [isResponding, setIsResponding] = useState(false);
     const [error, setError] = useState('');
     const [responseError, setResponseError] = useState('');
+    const defaultResponseMessage =
+        'Здравствуйте! Заинтересован Вашим объявлением и хочу участвовать!';
+
+    const [responseMessage, setResponseMessage] = useState(
+        defaultResponseMessage
+    );
 
     useEffect(() => {
         fetch(`/api/advertisements/${advertisementId}`, {
@@ -46,11 +52,14 @@ export default function AdvertisementShow({advertisementId}) {
     }, [advertisementId]);
 
     const handleRespond = async () => {
+        const text = responseMessage.trim();
+
         if (
             !viewer?.authenticated ||
             viewer.is_owner ||
             viewer.has_responded ||
-            isResponding
+            isResponding ||
+            !text
         ) {
             return;
         }
@@ -65,8 +74,13 @@ export default function AdvertisementShow({advertisementId}) {
                     method: 'POST',
                     headers: {
                         Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken(),
                     },
                     credentials: 'same-origin',
+                    body: JSON.stringify({
+                        message: text,
+                    }),
                 }
             );
 
@@ -121,14 +135,36 @@ export default function AdvertisementShow({advertisementId}) {
 
         if (viewer.authenticated) {
             return (
-                <button
-                    type="button"
-                    disabled={isResponding}
-                    onClick={handleRespond}
-                    className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    {isResponding ? 'Отправка...' : 'Отозваться'}
-                </button>
+                <div className="w-full">
+                    <label
+                        htmlFor="response-message"
+                        className="block text-sm font-medium text-gray-700"
+                    >
+                        Сообщение
+                    </label>
+
+                    <textarea
+                        id="response-message"
+                        value={responseMessage}
+                        onChange={(event) =>
+                            setResponseMessage(event.target.value)
+                        }
+                        rows={4}
+                        placeholder="Напишите сообщение автору объявления..."
+                        className="mt-2 w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    />
+
+                    <button
+                        type="button"
+                        disabled={
+                            !responseMessage.trim() || isResponding
+                        }
+                        onClick={handleRespond}
+                        className="mt-3 inline-flex items-center justify-center rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        {isResponding ? 'Отправка...' : 'Отправить отклик'}
+                    </button>
+                </div>
             );
         }
 
@@ -296,4 +332,10 @@ export default function AdvertisementShow({advertisementId}) {
             </main>
         </div>
     );
+}
+
+function getCsrfToken() {
+    return document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
 }

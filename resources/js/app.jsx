@@ -15,6 +15,11 @@ import GroupAdvertisementForm from './pages/GroupAdvertisementForm.jsx';
 import FamilyTeacherAdvertisementForm from './pages/FamilyTeacherAdvertisementForm.jsx';
 import AdvertisementEditPage from './pages/AdvertisementEditPage.jsx';
 
+import Conversations from './pages/Conversations.jsx';
+import ConversationShow from './pages/ConversationShow.jsx';
+
+import Layout from './components/Layout.jsx';
+
 import AdminLayout from './layouts/AdminLayout.jsx';
 
 import Dashboard from './pages/admin/Dashboard.jsx';
@@ -57,9 +62,20 @@ function AdminPage() {
     }
 }
 
+function UserPage({children}) {
+    return (
+        <Layout>
+            {children}
+        </Layout>
+    );
+}
+
 function App() {
     const path = window.location.pathname;
 
+    /*
+     * Админка использует отдельный Layout.
+     */
     if (path === '/admin' || path.startsWith('/admin/')) {
         return (
             <AdminLayout>
@@ -68,32 +84,17 @@ function App() {
         );
     }
 
+    /*
+     * Reset password оставляем без обычного пользовательского Layout.
+     */
     if (path === '/reset-password' || path.startsWith('/reset-password/')) {
         return <ResetPassword/>;
     }
 
+    /*
+     * Страницы авторизации тоже пока оставляем без Layout.
+     */
     switch (path) {
-        case '/':
-            return <Home/>;
-
-        case '/advertisements':
-            return <Advertisements/>;
-
-        case '/my-advertisements':
-            return <MyAdvertisements/>;
-
-        case '/advertisements/create':
-            return <AdvertisementTypeSelector/>;
-
-        case '/advertisements/new':
-            return <GroupAdvertisementForm/>;
-
-        case '/advertisements/new-teacher':
-            return <FamilyTeacherAdvertisementForm/>;
-
-        case '/family/profile':
-            return <FamilyProfile/>;
-
         case '/register':
             return <Register/>;
 
@@ -102,32 +103,118 @@ function App() {
 
         case '/forgot-password':
             return <ForgotPassword/>;
+    }
+
+    /*
+     * Личные сообщения.
+     */
+    if (path === '/conversations') {
+        return (
+            <UserPage>
+                <Conversations/>
+            </UserPage>
+        );
+    }
+
+    const conversationMatch = path.match(
+        /^\/conversations\/(\d+)$/
+    );
+
+    if (conversationMatch) {
+        return (
+            <UserPage>
+                <ConversationShow
+                    conversationId={conversationMatch[1]}
+                />
+            </UserPage>
+        );
+    }
+
+    switch (path) {
+        case '/':
+            return (
+                <UserPage>
+                    <Home/>
+                </UserPage>
+            );
+
+        case '/advertisements':
+            return (
+                <UserPage>
+                    <Advertisements/>
+                </UserPage>
+            );
+
+        case '/my-advertisements':
+            return (
+                <UserPage>
+                    <MyAdvertisements/>
+                </UserPage>
+            );
+
+        case '/advertisements/create':
+            return (
+                <UserPage>
+                    <AdvertisementTypeSelector/>
+                </UserPage>
+            );
+
+        case '/advertisements/new':
+            return (
+                <UserPage>
+                    <GroupAdvertisementForm/>
+                </UserPage>
+            );
+
+        case '/advertisements/new-teacher':
+            return (
+                <UserPage>
+                    <FamilyTeacherAdvertisementForm/>
+                </UserPage>
+            );
+
+        case '/family/profile':
+            return (
+                <UserPage>
+                    <FamilyProfile/>
+                </UserPage>
+            );
 
         default: {
-            const editMatch = path.match(/^\/advertisements\/(\d+)\/edit$/);
+            const editMatch = path.match(
+                /^\/advertisements\/(\d+)\/edit$/
+            );
 
             if (editMatch) {
                 return (
-                    <AdvertisementEditPage
-                        advertisementId={editMatch[1]}
-                    />
+                    <UserPage>
+                        <AdvertisementEditPage
+                            advertisementId={editMatch[1]}
+                        />
+                    </UserPage>
                 );
             }
 
-            const showMatch = path.match(/^\/advertisements\/(\d+)$/);
+            const showMatch = path.match(
+                /^\/advertisements\/(\d+)$/
+            );
 
             if (showMatch) {
                 return (
-                    <AdvertisementShow
-                        advertisementId={showMatch[1]}
-                    />
+                    <UserPage>
+                        <AdvertisementShow
+                            advertisementId={showMatch[1]}
+                        />
+                    </UserPage>
                 );
             }
 
             return (
-                <div>
-                    <h1>Family Education</h1>
-                </div>
+                <UserPage>
+                    <div>
+                        <h1>Family Education</h1>
+                    </div>
+                </UserPage>
             );
         }
     }

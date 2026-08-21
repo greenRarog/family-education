@@ -19,6 +19,13 @@ class ConversationController extends Controller
             ->with([
                 'advertisementResponse.user',
                 'advertisementResponse.advertisement',
+                'messages.user',
+            ])->withExists([
+                'messages as has_unread_messages' => function ($query) use ($user) {
+                    $query
+                        ->where('user_id', '!=', $user->id)
+                        ->whereNull('read_at');
+                },
             ])
             ->where(function ($query) use ($user) {
                 $query
@@ -31,6 +38,7 @@ class ConversationController extends Controller
                         fn ($query) => $query->where('user_id', $user->id)
                     );
             })
+            ->orderByDesc('has_unread_messages')
             ->latest('updated_at')
             ->paginate(20);
 

@@ -24,6 +24,7 @@ class MessageTest extends TestCase
         [$owner] = $this->familyWithUser();
         [$user] = $this->familyWithUser();
         $conversation = $this->createConversation($owner, $user);
+        $conversation->advertisementResponse->update(['status' => AdvertisementResponseStatus::ACCEPTED]);
 
         $this->actingAs($user)
             ->postJson("/api/conversations/{$conversation->id}/messages", [
@@ -163,6 +164,46 @@ class MessageTest extends TestCase
         $this->assertDatabaseHas('messages', [
             'id' => $message->id,
             'read_at' => null,
+        ]);
+    }
+
+    public function test_conversation_participant_cannot_send_message_before_response_is_accepted(): void
+    {
+        [$owner] = $this->familyWithUser();
+        [$user] = $this->familyWithUser();
+        $conversation = $this->createConversation($owner, $user);
+
+        $this->actingAs($user)
+            ->postJson("/api/conversations/{$conversation->id}/messages", [
+                'message' => 'Новое сообщение.',
+            ])->assertUnprocessable();
+
+        $this->assertDatabaseMissing('messages', [
+            'conversation_id' => $conversation->id,
+            'user_id' => $user->id,
+            'body' => 'Новое сообщение.',
+        ]);
+    }
+
+    public function test_advertisement_owner_can_send_message_before_response_is_accepted(): void
+    {
+        [$owner] = $this->familyWithUser();
+        [$user] = $this->familyWithUser();
+        $conversation = $this->createConversation($owner, $user);
+
+        $this->actingAs($owner)
+            ->postJson("/api/conversations/{$conversation->id}/messages", [
+                'message' => 'Я получил ваш отклик.',
+            ])->assertCreated()
+            ->assertJsonPath(
+                'message.message',
+                'Я получил ваш отклик.'
+            );
+
+        $this->assertDatabaseHas('messages', [
+            'conversation_id' => $conversation->id,
+            'user_id' => $owner->id,
+            'body' => 'Я получил ваш отклик.',
         ]);
     }
 

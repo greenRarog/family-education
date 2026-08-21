@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\v1\Api;
 
+use App\Enums\AdvertisementResponseStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreMessageRequest;
 use App\Http\Resources\Api\MessageResource;
@@ -17,6 +18,21 @@ class MessageController extends Controller
     public function store(StoreMessageRequest $request, Conversation $conversation): JsonResponse
     {
         $this->authorizeConversation($request, $conversation);
+        $conversation->load('advertisementResponse');
+        $advertisementResponse = $conversation->advertisementResponse;
+        if ($advertisementResponse->status !== AdvertisementResponseStatus::ACCEPTED
+            && $advertisementResponse->user_id === $request->user()->id) {
+            abort(
+                422,
+                'Нельзя отправлять сообщения до принятия отклика.'
+            );
+        }
+        if ($advertisementResponse->status === AdvertisementResponseStatus::REJECTED) {
+            abort(
+                422,
+                'Диалог завершён.'
+            );
+        }
         $message = Message::query()->create([
             'conversation_id' => $conversation->id,
             'user_id' => $request->user()->id,

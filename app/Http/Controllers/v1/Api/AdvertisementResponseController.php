@@ -91,8 +91,12 @@ class AdvertisementResponseController extends Controller
         if ($advertisementResponse->advertisement->user_id !== auth()->id()) {
             abort(403);
         }
-        if ($advertisementResponse->status !== AdvertisementResponseStatus::SENT) {
-            abort(422, 'Отклик уже обработан.');
+        if (! in_array(
+            $advertisementResponse->status,
+            [AdvertisementResponseStatus::SENT, AdvertisementResponseStatus::ACCEPTED],
+            true)
+        ) {
+            abort(422, 'Отклик уже завершён.');
         }
         $advertisementResponse->update([
             'status' => AdvertisementResponseStatus::REJECTED,
