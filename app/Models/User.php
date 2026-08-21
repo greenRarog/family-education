@@ -38,6 +38,8 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Advertisement> $advertisements
  * @property-read int|null $advertisements_count
  * @property-read Family|null $family
+ * @property-read Collection<int, Message> $messages
+ * @property-read int|null $messages_count
  * @property-read NotificationSetting|null $notificationSetting
  * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
@@ -97,5 +99,10 @@ class User extends Authenticatable
     public function advertisementResponses(): HasMany
     {
         return $this->hasMany(AdvertisementResponse::class);
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
     }
 }

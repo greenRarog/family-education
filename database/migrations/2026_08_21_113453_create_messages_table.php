@@ -8,38 +8,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('advertisement_responses', function (Blueprint $table) {
+        Schema::create('messages', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('advertisement_id')
+            $table->foreignId('conversation_id')
                 ->constrained()
                 ->cascadeOnDelete();
-
             $table->foreignId('user_id')
                 ->constrained()
                 ->cascadeOnDelete();
-
-            $table->string('status');
-
+            $table->text('body');
+            $table->timestamp('read_at')->nullable();
             $table->timestamps();
 
-            $table->unique([
-                'advertisement_id',
-                'user_id',
-            ]);
+            $table->index(['conversation_id', 'created_at']);
+            $table->index(['conversation_id', 'read_at']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::drop('advertisement_responses');
+        Schema::drop('messages');
     }
 };

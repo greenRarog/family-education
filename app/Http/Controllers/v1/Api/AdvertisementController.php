@@ -10,7 +10,6 @@ use App\Enums\AdvertisementType;
 use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\Advertisement;
-use App\Models\AdvertisementResponse;
 use App\Models\District;
 use App\Models\MetroStation;
 use App\Services\BannedWordChecker;
@@ -242,36 +241,6 @@ class AdvertisementController extends Controller
         return response()->json([
             'advertisement' => $advertisement->fresh()->load($this->relations()),
         ]);
-    }
-
-    public function respond(Advertisement $advertisement): JsonResponse
-    {
-        $user = auth()->user();
-
-        if ($advertisement->status !== AdvertisementStatus::PUBLISHED) {
-            abort(404);
-        }
-
-        if ($advertisement->user_id === $user->id) {
-            return response()->json([
-                'message' => 'Нельзя откликнуться на собственное объявление.',
-            ], 422);
-        }
-
-        $response = AdvertisementResponse::query()->firstOrCreate([
-            'advertisement_id' => $advertisement->id,
-            'user_id' => $user->id,
-        ]);
-
-        if (! $response->wasRecentlyCreated) {
-            return response()->json([
-                'message' => 'Вы уже откликались на это объявление.',
-            ], 422);
-        }
-
-        return response()->json([
-            'message' => 'Отклик отправлен.',
-        ], 201);
     }
 
     /**

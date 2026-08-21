@@ -8,8 +8,11 @@ use App\Http\Controllers\v1\Api\Admin\DistrictController;
 use App\Http\Controllers\v1\Api\Admin\MetroStationController;
 use App\Http\Controllers\v1\Api\Admin\SubjectController;
 use App\Http\Controllers\v1\Api\AdvertisementController;
+use App\Http\Controllers\v1\Api\AdvertisementResponseController;
+use App\Http\Controllers\v1\Api\ConversationController;
 use App\Http\Controllers\v1\Api\FamilyController;
 use App\Http\Controllers\v1\Api\LocationController;
+use App\Http\Controllers\v1\Api\MessageController;
 use App\Http\Controllers\v1\Api\NotificationSettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,7 +32,14 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::put('/advertisements/{advertisement}', [AdvertisementController::class, 'update']);
     Route::post('/advertisements/{advertisement}/publish', [AdvertisementController::class, 'publish']);
     Route::post('/advertisements/{advertisement}/close', [AdvertisementController::class, 'close']);
-    Route::post('/advertisements/{advertisement}/responses', [AdvertisementController::class, 'respond']);
+    Route::post('/advertisements/{advertisement}/responses', [AdvertisementResponseController::class, 'store']);
+    Route::post('/advertisement-responses/{advertisementResponse}/accept', [AdvertisementResponseController::class, 'accept']);
+    Route::post('/advertisement-responses/{advertisementResponse}/reject', [AdvertisementResponseController::class, 'reject']);
+
+    Route::get('/conversations', [ConversationController::class, 'index']);
+    Route::get('/conversations/{conversation}', [ConversationController::class, 'show']);
+    Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store']);
+    Route::post('/conversations/{conversation}/read', [MessageController::class, 'read']);
 
     Route::get('/family', [FamilyController::class, 'show']);
     Route::put('/family', [FamilyController::class, 'update']);
