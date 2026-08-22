@@ -7,6 +7,7 @@ namespace App\Http\Controllers\v1\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\ConversationResource;
 use App\Models\Conversation;
+use App\Models\Message;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -60,6 +61,30 @@ class ConversationController extends Controller
 
         return response()->json([
             'conversation' => new ConversationResource($conversation),
+        ]);
+    }
+
+    public function unreadCount(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $count = Message::query()
+            ->whereNull('read_at')
+            ->where('user_id', '!=', $user->id)
+            ->whereHas('conversation', function ($query) use ($user) {
+                $query->where(function ($query) use ($user) {
+                    $query->whereHas(
+                        'advertisementResponse',
+                        fn ($query) => $query->where('user_id', $user->id)
+                    )->orWhereHas(
+                        'advertisementResponse.advertisement',
+                        fn ($query) => $query->where('user_id', $user->id)
+                    );
+                });
+            })
+            ->count();
+
+        return response()->json([
+            'count' => $count,
         ]);
     }
 

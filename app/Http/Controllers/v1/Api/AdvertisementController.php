@@ -10,6 +10,7 @@ use App\Enums\AdvertisementType;
 use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\Advertisement;
+use App\Models\AdvertisementResponse;
 use App\Models\District;
 use App\Models\MetroStation;
 use App\Services\BannedWordChecker;
@@ -116,19 +117,17 @@ class AdvertisementController extends Controller
     public function show(Advertisement $advertisement): JsonResponse
     {
         $user = auth()->user();
-
         $isOwner = $user?->id === $advertisement->user_id;
 
-        $hasResponded = $user !== null
-            && ! $isOwner
-            && $advertisement->responses()
+        /** @var AdvertisementResponse|null $response */
+        $response = $user !== null && ! $isOwner
+            ? $advertisement->responses()
                 ->where('user_id', $user->id)
-                ->exists();
-
-        if (
-            $advertisement->status !== AdvertisementStatus::PUBLISHED
-            && ! $isOwner
-        ) {
+                ->first()
+            : null;
+        $hasResponded = $response !== null;
+        $hasConversation = $response !== null && $response->conversation()->exists();
+        if ($advertisement->status !== AdvertisementStatus::PUBLISHED && ! $isOwner && ! $hasConversation) {
             abort(404);
         }
 
@@ -138,18 +137,14 @@ class AdvertisementController extends Controller
                 'authenticated' => $user !== null,
                 'is_owner' => $isOwner,
                 'has_responded' => $hasResponded,
+                'has_conversation' => $hasConversation,
             ],
         ]);
     }
 
-    public function edit(
-        Request $request,
-        Advertisement $advertisement
-    ): JsonResponse {
-        abort_unless(
-            $advertisement->user_id === $request->user()->id,
-            404
-        );
+    public function edit(Request $request, Advertisement $advertisement): JsonResponse
+    {
+        abort_unless($advertisement->user_id === $request->user()->id, 404);
 
         return response()->json([
             'advertisement' => $advertisement->load($this->relations()),
@@ -159,10 +154,8 @@ class AdvertisementController extends Controller
     /**
      * @throws ValidationException
      */
-    public function update(
-        Request $request,
-        Advertisement $advertisement
-    ): JsonResponse {
+    public function update(Request $request, Advertisement $advertisement): JsonResponse
+    {
         $this->ensureOwner($request, $advertisement);
 
         if ($advertisement->status === AdvertisementStatus::CLOSED) {
@@ -199,10 +192,8 @@ class AdvertisementController extends Controller
         ]);
     }
 
-    public function publish(
-        Request $request,
-        Advertisement $advertisement
-    ): JsonResponse {
+    public function publish(Request $request, Advertisement $advertisement): JsonResponse
+    {
         $this->ensureOwner($request, $advertisement);
 
         if ($advertisement->status !== AdvertisementStatus::DRAFT) {
@@ -221,10 +212,8 @@ class AdvertisementController extends Controller
         ]);
     }
 
-    public function close(
-        Request $request,
-        Advertisement $advertisement
-    ): JsonResponse {
+    public function close(Request $request, Advertisement $advertisement): JsonResponse
+    {
         $this->ensureOwner($request, $advertisement);
 
         if ($advertisement->status === AdvertisementStatus::CLOSED) {

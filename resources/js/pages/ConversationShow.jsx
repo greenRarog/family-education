@@ -287,8 +287,8 @@ export default function ConversationShow({conversationId}) {
                             </h1>
 
                             <a
-                                href={`/advertisements/${conversation.advertisement?.id}`}
-                                className="mt-1 inline-block text-sm text-gray-500 transition hover:text-gray-900"
+                                href={`/advertisements/${conversation.advertisement.id}`}
+                                className="mt-1 inline-block text-sm text-gray-500 hover:text-gray-900"
                             >
                                 Перейти к объявлению →
                             </a>

@@ -5,6 +5,7 @@ export default function Layout({children}) {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
     useEffect(() => {
         async function loadUser() {
@@ -20,16 +21,39 @@ export default function Layout({children}) {
                 if (!response.ok) {
                     setIsAuthenticated(false);
                     setUser(null);
+                    setUnreadMessagesCount(0);
                     return;
                 }
 
                 const data = await response.json();
 
-                setIsAuthenticated(data.authenticated === true);
+                const authenticated = data.authenticated === true;
+
+                setIsAuthenticated(authenticated);
                 setUser(data.user ?? null);
+
+                if (authenticated) {
+                    const unreadResponse = await fetch(
+                        '/api/conversations/unread-count',
+                        {
+                            method: 'GET',
+                            headers: {
+                                Accept: 'application/json',
+                            },
+                            credentials: 'same-origin',
+                        }
+                    );
+
+                    if (unreadResponse.ok) {
+                        const unreadData = await unreadResponse.json();
+
+                        setUnreadMessagesCount(unreadData.count ?? 0);
+                    }
+                }
             } catch {
                 setIsAuthenticated(false);
                 setUser(null);
+                setUnreadMessagesCount(0);
             } finally {
                 setIsLoading(false);
             }
@@ -44,6 +68,7 @@ export default function Layout({children}) {
                 user={user}
                 isAuthenticated={isAuthenticated}
                 isLoading={isLoading}
+                unreadMessagesCount={unreadMessagesCount}
             />
 
             <main>

@@ -1,10 +1,6 @@
 import {useState} from 'react';
 
-export default function Header({
-                                   user,
-                                   isAuthenticated,
-                                   isLoading,
-                               }) {
+export default function Header({user, isAuthenticated, isLoading, unreadMessagesCount = 0,}) {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [error, setError] = useState('');
 
@@ -41,6 +37,21 @@ export default function Header({
         }
     }
 
+    function renderUnreadMessagesCount() {
+        if (!unreadMessagesCount) {
+            return null;
+        }
+
+        return (
+            <span
+                className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-xs font-medium leading-none text-white"
+                aria-label={`Непрочитанных сообщений: ${unreadMessagesCount}`}
+            >
+                {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+            </span>
+        );
+    }
+
     function renderNavigation() {
         if (isLoading) {
             return (
@@ -67,9 +78,10 @@ export default function Header({
 
                     <a
                         href="/conversations"
-                        className="text-sm text-gray-600 transition hover:text-gray-900"
+                        className="flex items-center text-sm text-gray-600 transition hover:text-gray-900"
                     >
-                        Личные сообщения
+                        <span>Личные сообщения</span>
+                        {renderUnreadMessagesCount()}
                     </a>
 
                     <a
