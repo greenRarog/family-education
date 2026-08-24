@@ -27,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property string|null $telegram_chat_id
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
@@ -55,17 +56,22 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|User whereName($value)
  * @method static Builder<static>|User wherePassword($value)
  * @method static Builder<static>|User whereRememberToken($value)
+ * @method static Builder<static>|User whereTelegramChatId($value)
  * @method static Builder<static>|User whereUpdatedAt($value)
  * @method static Builder<static>|User whereUserType($value)
  *
  * @mixin Eloquent
  */
-#[Fillable(['name', 'email', 'password', 'user_type'])]
+#[Fillable(['name', 'email', 'password', 'user_type', 'telegram_chat_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, MustVerifyEmail, Notifiable;
+
+    protected $fillable = [
+        'name',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -104,5 +110,21 @@ class User extends Authenticatable
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    public function emailNotificationsEnabled(): bool
+    {
+        $setting = $this->notificationSetting;
+
+        return $setting === null || $setting->email_enabled;
+    }
+
+    public function telegramNotificationsEnabled(): bool
+    {
+        $setting = $this->notificationSetting;
+
+        return $setting !== null
+            && $setting->telegram_enabled
+            && $this->telegram_chat_id !== null;
     }
 }

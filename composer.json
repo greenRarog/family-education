@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.3",
         "fakerphp/faker": "^1.23",
+        "laravel-notification-channels/telegram": "^7.0",
         "laravel/fortify": "^1.38",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0"

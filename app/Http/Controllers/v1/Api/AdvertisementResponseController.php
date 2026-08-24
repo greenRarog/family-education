@@ -6,6 +6,7 @@ namespace App\Http\Controllers\v1\Api;
 
 use App\Enums\AdvertisementResponseStatus;
 use App\Enums\AdvertisementStatus;
+use App\Events\NewResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreAdvertisementResponseRequest;
 use App\Http\Resources\Api\AdvertisementResponseResource;
@@ -56,6 +57,7 @@ class AdvertisementResponseController extends Controller
                 'conversation',
             ]);
         });
+        NewResponse::dispatch($response);
 
         return response()->json([
             'response' => new AdvertisementResponseResource($response),

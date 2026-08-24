@@ -8,6 +8,7 @@ use App\Enums\AdvertisementStatus;
 use App\Models\Advertisement;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class CloseExpiredAdvertisementsTest extends TestCase
@@ -23,6 +24,7 @@ class CloseExpiredAdvertisementsTest extends TestCase
 
     public function test_it_closes_expired_published_advertisements(): void
     {
+        Notification::fake();
         Carbon::setTestNow(Carbon::parse('2026-08-22 12:00:00'));
         $expired = Advertisement::factory()->create([
             'status' => AdvertisementStatus::PUBLISHED,

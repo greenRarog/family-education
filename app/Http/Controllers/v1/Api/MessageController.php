@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\v1\Api;
 
 use App\Enums\AdvertisementResponseStatus;
+use App\Events\NewMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreMessageRequest;
 use App\Http\Resources\Api\MessageResource;
@@ -40,6 +41,7 @@ class MessageController extends Controller
         ]);
         $conversation->touch();
         $message->load('user');
+        NewMessage::dispatch($message);
 
         return response()->json([
             'message' => new MessageResource($message),

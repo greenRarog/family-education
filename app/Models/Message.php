@@ -51,6 +51,7 @@ class Message extends Model
         'user_id',
         'body',
         'read_at',
+        'message',
     ];
 
     protected function casts(): array

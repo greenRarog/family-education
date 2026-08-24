@@ -282,21 +282,21 @@ Advertisement
 
 ### Сначала реализуется email.
 
-- [ ] Events
-- [ ] NewResponse
-- [ ] NewMessage
-- [ ] AdvertisementExpired
-- [ ] Email
-- [ ] Email при новом отклике
-- [ ] Email при новом сообщении
-- [ ] Email об истечении объявления
-- [ ] Настройки email-уведомлений
+- [x] Events
+- [x] NewResponse
+- [x] NewMessage
+- [x] AdvertisementExpired
+- [x] Email
+- [x] Email при новом отклике
+- [x] Email при новом сообщении
+- [x] Email об истечении объявления
+- [x] Настройки email-уведомлений
 - [ ] Telegram
 
 ### Подключается после email без изменения основной доменной логики.
 
-- [ ] Telegram notification channel
-- [ ] Подключение Telegram
+- [x] Telegram notification channel
+- [x] Подключение Telegram
 - [ ] Настройки Telegram-уведомлений
 
 **Результат:**
