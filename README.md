@@ -278,6 +278,28 @@ Advertisement
 
 ---
 
+## Фаза 5.5 — Frontend/Backend separation
+
+[x] API привести к единому формату
+[ ] Все frontend-запросы вынести из компонентов в API client
+[ ] Отделить React от Laravel
+[ ] Отдельный frontend repository
+[ ] Отдельный backend repository
+[ ] React Router
+[ ] Sanctum SPA authentication
+[ ] CORS
+[ ] Session cookie между frontend/API
+[ ] Vite development proxy
+[ ] Production frontend container
+[ ] Production backend container
+[ ] Раздельный CI
+[ ] Раздельный deployment
+[ ] Проверить все authentication flows
+[ ] Проверить все advertisement flows
+[ ] Проверить response/messaging flows
+
+---
+
 ## Фаза 6. Notifications
 
 ### Сначала реализуется email.
