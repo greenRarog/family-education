@@ -1,85 +1,72 @@
 services:
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: app
-      args:
-        WWWUSER: "${WWWUSER}"
-        WWWGROUP: "${WWWGROUP}"
-    container_name: family-education-app
-    restart: unless-stopped
-    working_dir: /var/www/html
-    user: "${WWWUSER}:${WWWGROUP}"
-    volumes:
-      - ./:/var/www/html
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    networks:
-      - family-education
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: app
+            args:
+                WWWUSER: "${WWWUSER}"
+                WWWGROUP: "${WWWGROUP}"
+        container_name: family-education-app
+        restart: unless-stopped
+        working_dir: /var/www/html
+        user: "${WWWUSER}:${WWWGROUP}"
+        volumes:
+            - ./:/var/www/html
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_started
+        networks:
+            - family-education
 
-  nginx:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: nginx
-    container_name: family-education-nginx
-    restart: unless-stopped
-    ports:
-      - "8080:80"
-    volumes:
-      - ./:/var/www/html
-      - ./docker/nginx/local.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - app
-    networks:
-      - family-education
+    nginx:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: nginx
+        container_name: family-education-nginx
+        restart: unless-stopped
+        ports:
+            - "8080:80"
+        volumes:
+            - ./:/var/www/html
+            - ./docker/nginx/local.conf:/etc/nginx/conf.d/default.conf:ro
+        depends_on:
+            - app
+        networks:
+            - family-education
 
-  postgres:
-    image: postgres:17-alpine
-    container_name: family-education-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: family_education
-      POSTGRES_USER: family_education
-      POSTGRES_PASSWORD: secret
-    ports:
-      - "15433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U family_education -d family_education"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    networks:
-      - family-education
+    postgres:
+        image: postgres:17-alpine
+        container_name: family-education-postgres
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: family_education
+            POSTGRES_USER: family_education
+            POSTGRES_PASSWORD: secret
+        ports:
+            - "15433:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U family_education -d family_education"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+        networks:
+            - family-education
 
-  redis:
-    image: redis:8-alpine
-    container_name: family-education-redis
-    restart: unless-stopped
-    volumes:
-      - redis_data:/data
-    networks:
-      - family-education
-
-  node:
-    image: node:22-alpine
-    container_name: family-education-node
-    working_dir: /var/www/html
-    user: "${WWWUSER}:${WWWGROUP}"
-    volumes:
-      - ./:/var/www/html
-    ports:
-      - "5173:5173"
-    networks:
-      - family-education
-    command: npm run dev -- --host 0.0.0.0
+    redis:
+        image: redis:8-alpine
+        container_name: family-education-redis
+        restart: unless-stopped
+        volumes:
+            - redis_data:/data
+        networks:
+            - family-education
 
 networks:
     family-education:
@@ -87,5 +74,5 @@ networks:
         name: family-education
 
 volumes:
-  postgres_data:
-  redis_data:
+    postgres_data:
+    redis_data:

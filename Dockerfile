@@ -1,23 +1,4 @@
 # ------------------------------------------------------------
-# Frontend build
-# ------------------------------------------------------------
-FROM node:22-alpine AS frontend
-
-WORKDIR /var/www/html
-
-COPY package.json package-lock.json ./
-
-RUN npm ci
-
-COPY resources ./resources
-COPY public ./public
-COPY vite.config.js ./
-COPY .env.example ./
-
-RUN npm run build
-
-
-# ------------------------------------------------------------
 # PHP application
 # ------------------------------------------------------------
 FROM php:8.4-fpm AS app
@@ -62,8 +43,6 @@ RUN composer install \
 
 COPY . .
 
-COPY --from=frontend /var/www/html/public/build ./public/build
-
 RUN composer dump-autoload \
     --no-dev \
     --optimize
@@ -85,7 +64,5 @@ CMD ["php-fpm"]
 FROM nginx:1.29-alpine AS nginx
 
 COPY public /var/www/html/public
-
-COPY --from=frontend /var/www/html/public/build /var/www/html/public/build
 
 EXPOSE 80

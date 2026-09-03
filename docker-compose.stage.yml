@@ -2,7 +2,7 @@ services:
 
   app:
     build:
-      context: .
+      context: ../backend./backend
       dockerfile: Dockerfile
       target: app
       args:
@@ -30,7 +30,7 @@ services:
 
   nginx:
     build:
-      context: .
+      context: ../backend
       dockerfile: Dockerfile
       target: nginx
     container_name: family-education-nginx
