@@ -1,7 +1,7 @@
 # ------------------------------------------------------------
 # PHP application
 # ------------------------------------------------------------
-FROM php:8.4-fpm AS app
+FROM php:8.4.27-fpm AS app
 
 ARG WWWUSER=1000
 ARG WWWGROUP=1000
@@ -28,6 +28,8 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+COPY docker/php/99-security.ini /usr/local/etc/php/conf.d/99-security.ini
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
@@ -48,6 +50,7 @@ RUN composer dump-autoload \
     --optimize
 
 RUN chown -R ${WWWUSER}:${WWWGROUP} \
+    vendor \
     storage \
     bootstrap/cache
 

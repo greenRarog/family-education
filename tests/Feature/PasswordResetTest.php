@@ -16,15 +16,6 @@ class PasswordResetTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_can_open_forgot_password_page(): void
-    {
-        $response = $this->get('/forgot-password');
-
-        $response
-            ->assertSuccessful()
-            ->assertViewIs('app');
-    }
-
     public function test_guest_can_request_password_reset_link(): void
     {
         $user = User::factory()->create();
@@ -42,15 +33,6 @@ class PasswordResetTest extends TestCase
             $user,
             ResetPassword::class,
         );
-    }
-
-    public function test_guest_can_open_reset_password_page(): void
-    {
-        $response = $this->get('/reset-password/test-token');
-
-        $response
-            ->assertSuccessful()
-            ->assertViewIs('app');
     }
 
     public function test_user_can_reset_password(): void

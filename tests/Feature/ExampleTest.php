@@ -7,13 +7,10 @@ use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_csrf_endpoint_is_available_to_the_frontend(): void
     {
-        $response = $this->get('/');
+        $response = $this->get('/api/csrf');
 
-        $response->assertStatus(200);
+        $response->assertNoContent();
     }
 }

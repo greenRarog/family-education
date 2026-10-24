@@ -22,6 +22,7 @@ Route::get('/cities/{city}/metro-stations', [LocationController::class, 'metroSt
 Route::get('/subjects', [SubjectController::class, 'index']);
 
 Route::middleware('web')->group(function () {
+    Route::get('/csrf', static fn () => response()->noContent());
     Route::get('/advertisements/feed', [AdvertisementController::class, 'feed']);
     Route::get('/advertisements/{advertisement}', [AdvertisementController::class, 'show']);
 });

@@ -188,7 +188,7 @@
 - [x] Expiration
 - [x] Автоматическое закрытие объявления через 1 год
 - [ ] Уведомление владельцу об истечении срока
-- [ ] Добавить cron в docker-compose local + stage
+- [x] Запускать планировщик Laravel в отдельном Compose-сервисе local + stage
 
 **Правило:**
 
@@ -280,23 +280,21 @@ Advertisement
 
 ## Фаза 5.5 — Frontend/Backend separation
 
-[x] API привести к единому формату
-[ ] Все frontend-запросы вынести из компонентов в API client
-[ ] Отделить React от Laravel
-[ ] Отдельный frontend repository
-[ ] Отдельный backend repository
-[ ] React Router
-[ ] Sanctum SPA authentication
-[ ] CORS
-[ ] Session cookie между frontend/API
-[ ] Vite development proxy
-[ ] Production frontend container
-[ ] Production backend container
-[ ] Раздельный CI
-[ ] Раздельный deployment
-[ ] Проверить все authentication flows
-[ ] Проверить все advertisement flows
-[ ] Проверить response/messaging flows
+- [x] API привести к единому JSON-формату
+- [x] Запросы frontend вынести в общий API client
+- [x] Отдельный frontend repository
+- [x] Отдельный backend repository
+- [x] React Router
+- [x] Same-origin reverse proxy для API и auth
+- [x] Session-cookie auth и CSRF cookie
+- [x] Production frontend/backend containers
+- [x] Удалить оставшуюся старую React/Vite сборку из backend repository
+- [ ] Раздельный CI и автоматический deployment
+- [ ] Проверить authentication flows
+- [ ] Проверить advertisement flows
+- [ ] Проверить response/messaging flows
+
+Отметки отражают наличие кода и конфигурации. Пользовательские потоки ещё требуется проверить в запущенном окружении.
 
 ---
 
@@ -313,10 +311,6 @@ Advertisement
 - [x] Email при новом сообщении
 - [x] Email об истечении объявления
 - [x] Настройки email-уведомлений
-- [ ] Telegram
-
-### Подключается после email без изменения основной доменной логики.
-
 - [x] Telegram notification channel
 - [x] Подключение Telegram
 - [ ] Настройки Telegram-уведомлений
@@ -333,22 +327,14 @@ Advertisement
 
 ### Минимальная административная панель.
 
-- [ ] Administration
-- [ ] Users
-- [ ] Advertisements
-- [ ] Reports
-- [ ] Subjects
-- [ ] Blocked terms
-- [ ] Cities
-- [ ] Districts
-- [ ] Metro stations
+- [x] Управление городами, районами и станциями метро
+- [x] Управление предметами и запрещёнными словами
+- [ ] Модерация пользователей и объявлений
 - [ ] Actions
 - [ ] Заблокировать пользователя
 - [ ] Удалить пользователя
 - [ ] Удалить объявление
 - [ ] Закрыть объявление
-- [ ] Обработать жалобу
-- [ ] Управлять справочниками
 - [ ] Reports
 - [ ] Жалоба на объявление
 - [ ] Причина жалобы
@@ -407,386 +393,28 @@ Advertisement
 
 # Development
 
-## Requirements
+Backend, frontend и инфраструктура находятся в отдельных репозиториях. Актуальная схема каталогов, клонирования и запуска описана в [руководстве по инфраструктуре](../infrastructure/README.md).
 
-Для локальной разработки необходимы:
+```text
+family-education/
+├── backend/
+├── frontend/
+└── infrastructure/
+```
 
-- Windows / Linux / macOS
-- WSL2 (для Windows)
-- Ubuntu или другой Linux-дистрибутив в WSL
-- Docker Desktop
-- Git
+Для локальной разработки нужны Git и Docker Compose plugin. Основные команды:
 
-Внутри Docker используются:
+```bash
+./infrastructure/bin/local
+./infrastructure/bin/artisan key:generate
+./infrastructure/bin/artisan migrate
+```
 
-- PHP 8.4
-- Laravel
-- PostgreSQL 17
-- Redis 8
-- Nginx
-- Node.js 22
+Приложение открывается на <http://localhost:8081>. Запуск на stage выполняется через `./infrastructure/bin/stage` после настройки production env-файлов.
 
-PHP, Composer, PostgreSQL, Redis, Nginx и Node.js не требуется устанавливать непосредственно в операционную систему.
+Backend tests, style и static analysis запускаются командами Composer из `composer.json`. Полные команды запуска среды и работы с Docker находятся в infrastructure README.
 
 ---
-
-# Local setup
-
-## 1. Clone repository
-
-```bash
-git clone <repository-url>
-cd family-education
-```
-
-## 2. Configure environment
-
-```bash   
-cp .env.example .env
-```
-
-При необходимости изменить значения в .env.
-
-Для Docker-пользователя должны быть указаны:
-
-```dotenv
-WWWUSER=1000
-WWWGROUP=1000
-```
-
-Проверить UID/GID текущего пользователя:
-
-```bash
-id -u
-id -g
-```
-
-### 3. Start containers
-
-```bash
-   docker compose up -d --build
-```
-
-Проверить состояние:
-
-```bash
-docker compose ps
-```
-
-Ожидаемые сервисы:
-
-```
-app
-nginx
-node
-postgres
-redis
-```
-
-### 4. Install PHP dependencies
-
-```bash
-   docker compose exec app composer install
-```
-
-### 5. Generate application key
-
-```bash   
-docker compose exec app php artisan key:generate
-```
-
-### 6. Run migrations
-
-```bash
-   docker compose exec app php artisan migrate
-```
-
-### 7. Install frontend dependencies
-
-```bash
-   docker compose exec node npm install
-```
-
-### 8. Start frontend development server
-
-```bash
-   docker compose up -d node
-```
-
-## Application
-
-Local application:
-
-```
-http://localhost:8080
-```
-
-Vite development server:
-
-```
-http://localhost:5173
-```
-
-## Useful local commands
-
-### Start
-
-```bash
-docker compose up -d
-```
-
-### Stop
-
-```bash
-docker compose down
-```
-
-### Rebuild
-
-```bash
-docker compose up -d --build
-```
-
-### Laravel Tinker
-
-```bash
-docker compose exec app php artisan tinker
-```
-
-### Tests
-
-```bash
-docker compose exec app composer test
-```
-
-### Code style / static analysis
-
-```bash
-docker compose exec app composer check
-```
-
-### Artisan
-
-```bash
-docker compose exec app php artisan <command>
-```
-
-### Composer
-
-```bash
-docker compose exec app composer <command>
-```
-
-### NPM
-
-```bash
-docker compose exec node npm <command>
-```
-
-### View logs
-
-```bash
-docker compose logs -f
-```
-
-Logs конкретного сервиса:
-
-```bash
-docker compose logs -f app
-docker compose logs -f nginx
-docker compose logs -f postgres
-docker compose logs -f redis
-```
-
----
-
-# Production deployment
-
-Production deployment рассчитан на VPS с Linux и Docker.
-
-## Requirements
-
-На VPS необходимо:
-
-- Linux
-- Docker
-- Docker Compose
-- Git
-- открытые порты 80 и 443
-- DNS-запись домена, указывающая на VPS
-
-Пример:
-
-```
-example.com      A    <VPS_IP>
-www.example.com  A    <VPS_IP>
-```
-
-### 1. Clone repository
-
-```bash
-   git clone <repository-url> /var/www/family-education
-   cd /var/www/family-education
-```
-
-### 2. Create environment
-
-```bash
-   cp .env.example .env
-```
-
-Заполнить production values.
-
-Особенно важно:
-
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://example.com
-
-Database credentials должны быть заданы через environment.
-
-### 3. Build and start application
-
-Production использует отдельный Compose-файл:
-
-```bash
-docker compose -f docker-compose.stage.yml up -d --build
-```
-
-Проверить:
-
-```bash
-docker compose -f docker-compose.stage.yml ps
-```
-
-### 4. Run migrations
-
-   ```bash
-docker compose -f docker-compose.stage.yml exec app php artisan migrate --force
-```
-
-### 5. Check application
-
-```bash
-   curl -I http://example.com
-```
-
-На этом этапе приложение должно быть доступно по HTTP.
-
-## HTTPS
-
-SSL-сертификат выпускается через Let's Encrypt и Certbot.
-
-Challenge-файлы находятся в:
-
-```bash
-certbot/www/
-```
-
-Сертификаты:
-
-```bash
-letsencrypt/
-```
-
-Получение сертификата:
-
-```bash
-docker run --rm \
--v "$(pwd)/certbot/www:/var/www/certbot" \
--v "$(pwd)/letsencrypt:/etc/letsencrypt" \
-certbot/certbot certonly \
---webroot \
--w /var/www/certbot \
--d example.com \
--d www.example.com \
---email <email> \
---agree-tos \
---no-eff-email
-```
-
-После получения сертификата необходимо перезапустить/reload Nginx:
-
-```bash
-docker compose -f docker-compose.stage.yml restart nginx
-```
-
-## SSL renewal
-
-Проверить возможность автоматического продления:
-
-```bash
-./scripts/renew-certificate.sh
-```
-
-Тестовое продление:
-
-```bash
-docker run --rm \
--v "$(pwd)/certbot/www:/var/www/certbot" \
--v "$(pwd)/letsencrypt:/etc/letsencrypt" \
-certbot/certbot renew \
---webroot \
--w /var/www/certbot \
---dry-run \
---no-random-sleep-on-renew
-```
-
-Автоматическое продление выполняется через cron.
-
-Пример:
-
-```bash
-0 3 * * * /var/www/family-education/scripts/renew-certificate.sh >> /var/log/family-education-certbot.log 2>&1
-```
-
-Certbot самостоятельно определяет, требуется ли продление сертификата.
-
-## Deployment script
-
-Production deployment выполняется через:
-
-```bash
-./scripts/deploy.sh
-```
-
-Типовой процесс:
-
-```
-GitHub
-↓
-CI
-↓
-SSH
-↓
-VPS
-↓
-deploy.sh
-↓
-Docker Compose
-↓
-Application
-```
-
-## CI
-
-CI запускается автоматически при:
-
-- push
-- pull request
-
-CI проверяет:
-
-- установку зависимостей;
-- запуск Laravel;
-- миграции;
-- подключение PostgreSQL;
-- подключение Redis;
-- code style;
-- static analysis;
-- тесты.
-
-Deployment в production выполняется после успешного CI для main.
 
 ## Architecture principles
 
@@ -860,7 +488,8 @@ Moderation
 # Проверки перед push в стейдж
 
 ```bash
-docker compose exec app vendor/bin/pint
-docker compose exec node npm run build
-docker compose exec app composer check
+./infrastructure/bin/compose exec app vendor/bin/pint
+./infrastructure/bin/compose exec app composer check
+./infrastructure/bin/compose exec frontend npm run lint
+./infrastructure/bin/compose exec frontend npm run build
 ```

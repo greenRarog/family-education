@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\TurnstileService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -148,18 +149,18 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_login_page_has_route_name_required_by_auth_middleware(): void
+    public function test_login_page_is_served_by_the_frontend_not_the_backend(): void
     {
         $this->get('/login')
-            ->assertOk();
+            ->assertMethodNotAllowed();
 
-        $this->assertSame(url('/login'), route('login'));
+        $this->assertFalse(Route::has('login'));
     }
 
-    public function test_guest_logout_redirects_to_login_instead_of_throwing_route_exception(): void
+    public function test_guest_logout_returns_an_api_authentication_error(): void
     {
-        $this->post('/logout')
-            ->assertRedirect(route('login'));
+        $this->postJson('/logout')
+            ->assertUnauthorized();
     }
 
     public function test_authenticated_user_can_get_current_user(): void
