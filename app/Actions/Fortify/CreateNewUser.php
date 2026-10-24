@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Actions\Fortify;
 
 use App\Enums\UserType;
+use App\Enums\SupportedLanguage;
 use App\Models\Child;
 use App\Models\District;
 use App\Models\Family;
 use App\Models\MetroStation;
+use App\Models\TeacherProfile;
 use App\Models\User;
 use App\Services\TurnstileService;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +35,7 @@ class CreateNewUser implements CreatesNewUsers
      *     password: string,
      *     password_confirmation: string,
      *     cf-turnstile-response: string,
+     *     user_type?: string,
      *     surname: string,
      *     city_id: int|string,
      *     district_id?: int|string|null,
@@ -42,13 +45,19 @@ class CreateNewUser implements CreatesNewUsers
      *         birth_date: string,
      *         sex: string
      *     }>
+     *     subject_ids?: array<int, int|string>,
+     *     about?: string|null,
+     *     education?: string|null,
      * } $input
      *
      * @throws ValidationException
      */
     public function create(array $input): User
     {
-        Validator::make($input, [
+        $userType = $input['user_type'] ?? UserType::FAMILY->value;
+        $isTeacher = $userType === UserType::TEACHER->value;
+
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
@@ -63,7 +72,11 @@ class CreateNewUser implements CreatesNewUsers
                 'required',
                 'string',
             ],
-
+            'user_type' => [
+                'nullable',
+                Rule::in([UserType::FAMILY->value, UserType::TEACHER->value]),
+            ],
+            'language' => ['nullable', Rule::enum(SupportedLanguage::class)],
             'surname' => ['required', 'string', 'max:255'],
 
             'city_id' => [
@@ -84,29 +97,25 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::exists('metro_stations', 'id'),
             ],
 
-            'children' => [
-                'required',
-                'array',
-                'min:1',
-            ],
+        ];
 
-            'children.*.name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
+        if ($isTeacher) {
+            $rules += [
+                'subject_ids' => ['required', 'array', 'min:1'],
+                'subject_ids.*' => ['required', 'integer', 'distinct', Rule::exists('subjects', 'id')],
+                'about' => ['nullable', 'string', 'max:3000'],
+                'education' => ['nullable', 'string', 'max:3000'],
+            ];
+        } else {
+            $rules += [
+                'children' => ['required', 'array', 'min:1'],
+                'children.*.name' => ['required', 'string', 'max:255'],
+                'children.*.birth_date' => ['required', 'date'],
+                'children.*.sex' => ['required', 'string', 'in:male,female'],
+            ];
+        }
 
-            'children.*.birth_date' => [
-                'required',
-                'date',
-            ],
-
-            'children.*.sex' => [
-                'required',
-                'string',
-                'in:male,female',
-            ],
-        ])->validate();
+        $data = Validator::make($input, $rules)->validate();
 
         if (! $this->turnstile->verify($input['cf-turnstile-response'])) {
             Validator::make([], [])->after(function ($validator) {
@@ -117,25 +126,44 @@ class CreateNewUser implements CreatesNewUsers
             })->validate();
         }
 
-        $this->validateFamilyLocation($input);
+        $this->validateFamilyLocation($data);
 
-        return DB::transaction(function () use ($input) {
+        return DB::transaction(function () use ($data, $isTeacher) {
             $user = User::create([
-                'name' => $input['name'],
-                'email' => $input['email'],
-                'password' => Hash::make($input['password']),
-                'user_type' => UserType::FAMILY,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'user_type' => $isTeacher ? UserType::TEACHER : UserType::FAMILY,
+                'locale' => $data['language'] ?? SupportedLanguage::RUSSIAN->value,
             ]);
+
+            if ($isTeacher) {
+                /** @var TeacherProfile $profile */
+                $profile = $user->teacherProfile()->create([
+                    'surname' => $data['surname'],
+                    'city_id' => $data['city_id'],
+                    'district_id' => $data['district_id'] ?? null,
+                    'metro_station_id' => $data['metro_station_id'] ?? null,
+                    'about' => $data['about'] ?? null,
+                    'education' => $data['education'] ?? null,
+                    'public_profile_requested' => false,
+                    'public_profile_status' => 'private',
+                ]);
+
+                $profile->subjects()->sync($data['subject_ids']);
+
+                return $user;
+            }
 
             $family = Family::create([
                 'user_id' => $user->id,
-                'surname' => $input['surname'],
-                'city_id' => $input['city_id'],
-                'district_id' => $input['district_id'] ?? null,
-                'metro_station_id' => $input['metro_station_id'] ?? null,
+                'surname' => $data['surname'],
+                'city_id' => $data['city_id'],
+                'district_id' => $data['district_id'] ?? null,
+                'metro_station_id' => $data['metro_station_id'] ?? null,
             ]);
 
-            foreach ($input['children'] as $child) {
+            foreach ($data['children'] as $child) {
                 Child::create([
                     'family_id' => $family->id,
                     'name' => $child['name'],

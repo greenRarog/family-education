@@ -7,6 +7,7 @@ use App\Http\Controllers\v1\Api\Admin\CityController;
 use App\Http\Controllers\v1\Api\Admin\DistrictController;
 use App\Http\Controllers\v1\Api\Admin\MetroStationController;
 use App\Http\Controllers\v1\Api\Admin\SubjectController;
+use App\Http\Controllers\v1\Api\Admin\TeacherProfileController as AdminTeacherProfileController;
 use App\Http\Controllers\v1\Api\AdvertisementController;
 use App\Http\Controllers\v1\Api\AdvertisementResponseController;
 use App\Http\Controllers\v1\Api\ConversationController;
@@ -14,6 +15,8 @@ use App\Http\Controllers\v1\Api\FamilyController;
 use App\Http\Controllers\v1\Api\LocationController;
 use App\Http\Controllers\v1\Api\MessageController;
 use App\Http\Controllers\v1\Api\NotificationSettingController;
+use App\Http\Controllers\v1\Api\TeacherController;
+use App\Http\Controllers\v1\Api\UserLanguageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/cities', [LocationController::class, 'cities']);
@@ -25,8 +28,10 @@ Route::middleware('web')->group(function () {
     Route::get('/csrf', static fn () => response()->noContent());
     Route::get('/advertisements/feed', [AdvertisementController::class, 'feed']);
     Route::get('/advertisements/{advertisement}', [AdvertisementController::class, 'show']);
+    Route::get('/teachers/{user}', [TeacherController::class, 'publicProfile']);
 });
 Route::middleware(['web', 'auth'])->group(function () {
+    Route::put('/user/language', [UserLanguageController::class, 'update']);
     Route::get('/advertisements', [AdvertisementController::class, 'index']);
     Route::get('/advertisements/{advertisement}/edit', [AdvertisementController::class, 'edit']);
     Route::post('/advertisements', [AdvertisementController::class, 'store']);
@@ -45,6 +50,8 @@ Route::middleware(['web', 'auth'])->group(function () {
 
     Route::get('/family', [FamilyController::class, 'show']);
     Route::put('/family', [FamilyController::class, 'update']);
+    Route::get('/teacher-profile', [TeacherController::class, 'show']);
+    Route::put('/teacher-profile', [TeacherController::class, 'update']);
 
     Route::get('/locations', [LocationController::class, 'index']);
 
@@ -60,4 +67,7 @@ Route::middleware(['auth', 'admin', 'web'])
         Route::apiResource('metro-stations', MetroStationController::class);
         Route::apiResource('subjects', SubjectController::class);
         Route::apiResource('blocked-terms', BlockedTermController::class);
+    Route::get('teacher-profiles', [AdminTeacherProfileController::class, 'index']);
+    Route::post('teacher-profiles/{teacherProfile:user_id}/approve', [AdminTeacherProfileController::class, 'approve']);
+    Route::post('teacher-profiles/{teacherProfile:user_id}/reject', [AdminTeacherProfileController::class, 'reject']);
     });

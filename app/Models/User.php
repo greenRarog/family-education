@@ -8,6 +8,7 @@ use App\Enums\UserType;
 use Database\Factories\UserFactory;
 use Eloquent;
 use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
@@ -62,9 +63,9 @@ use Illuminate\Support\Carbon;
  *
  * @mixin Eloquent
  */
-#[Fillable(['name', 'email', 'password', 'user_type', 'telegram_chat_id'])]
+#[Fillable(['name', 'email', 'password', 'user_type', 'telegram_chat_id', 'locale'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements HasLocalePreference
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, MustVerifyEmail, Notifiable;
@@ -87,9 +88,19 @@ class User extends Authenticatable
         ];
     }
 
+    public function preferredLocale(): string
+    {
+        return $this->locale ?? 'ru';
+    }
+
     public function family(): HasOne
     {
         return $this->hasOne(Family::class);
+    }
+
+    public function teacherProfile(): HasOne
+    {
+        return $this->hasOne(TeacherProfile::class);
     }
 
     public function notificationSetting(): HasOne

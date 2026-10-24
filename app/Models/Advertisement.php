@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\AdvertisementStatus;
 use App\Enums\AdvertisementStudyFormat;
 use App\Enums\AdvertisementType;
+use App\Enums\LessonType;
 use Database\Factories\AdvertisementFactory;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,8 +31,8 @@ use Illuminate\Support\Carbon;
  * @property int $city_id
  * @property int|null $district_id
  * @property int|null $metro_station_id
- * @property int $participant_age_from
- * @property int $participant_age_to
+ * @property int|null $participant_age_from
+ * @property int|null $participant_age_to
  * @property string $description
  * @property Carbon|null $published_at
  * @property Carbon|null $closed_at
@@ -81,6 +82,8 @@ class Advertisement extends Model
         'type',
         'status',
         'format',
+        'language',
+        'lesson_type',
         'city_id',
         'district_id',
         'metro_station_id',
@@ -97,6 +100,7 @@ class Advertisement extends Model
             'type' => AdvertisementType::class,
             'status' => AdvertisementStatus::class,
             'format' => AdvertisementStudyFormat::class,
+            'lesson_type' => LessonType::class,
             'published_at' => 'datetime',
             'closed_at' => 'datetime',
         ];

@@ -158,10 +158,11 @@ class AdvertisementTest extends TestCase
         [$user] = $this->familyWithChildren();
 
         $this->actingAs($user)
-            ->postJson('/api/advertisements', [])
+            ->postJson('/api/advertisements', [
+                'type' => AdvertisementType::FAMILY_TO_FAMILY->value,
+            ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
-                'type',
                 'child_ids',
                 'participant_age_from',
                 'participant_age_to',
@@ -582,6 +583,99 @@ class AdvertisementTest extends TestCase
             ->assertJsonMissing([
                 'id' => $familyAdvertisement->id,
             ]);
+    }
+
+    public function test_public_feed_can_filter_advertisements_by_language(): void
+    {
+        [$owner] = $this->familyWithChildren();
+        $english = Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'language' => 'en',
+            'status' => AdvertisementStatus::PUBLISHED,
+            'published_at' => now(),
+        ]);
+        Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'language' => 'es',
+            'status' => AdvertisementStatus::PUBLISHED,
+            'published_at' => now(),
+        ]);
+
+        $this->getJson('/api/advertisements/feed?language=en')
+            ->assertOk()
+            ->assertJsonCount(1, 'advertisements.data')
+            ->assertJsonPath('advertisements.data.0.id', $english->id)
+            ->assertJsonPath('advertisements.data.0.language', 'en');
+    }
+
+    public function test_advertisement_creation_uses_selected_language(): void
+    {
+        [$user, , $children] = $this->familyWithChildren();
+        $city = City::factory()->create();
+        $payload = $this->payload(
+            $children,
+            $city,
+            null,
+            null,
+            AdvertisementType::FAMILY_TO_FAMILY,
+        );
+
+        $this->actingAs($user)
+            ->postJson('/api/advertisements', [...$payload, 'language' => 'es'])
+            ->assertCreated()
+            ->assertJsonPath('advertisement.language', 'es');
+
+        $this->assertDatabaseHas('advertisements', ['language' => 'es']);
+    }
+
+    public function test_advertisement_language_defaults_to_owners_interface_language(): void
+    {
+        [$user, , $children] = $this->familyWithChildren();
+        $user->forceFill(['locale' => 'es'])->save();
+        $payload = $this->payload(
+            $children,
+            City::factory()->create(),
+            null,
+            null,
+            AdvertisementType::FAMILY_TO_FAMILY,
+        );
+
+        $this->actingAs($user)
+            ->postJson('/api/advertisements', $payload)
+            ->assertCreated()
+            ->assertJsonPath('advertisement.language', 'es');
+    }
+
+    public function test_authenticated_user_can_update_interface_language(): void
+    {
+        $user = User::factory()->create(['locale' => 'ru']);
+
+        $this->actingAs($user)
+            ->putJson('/api/user/language', ['language' => 'en'])
+            ->assertOk()
+            ->assertJsonPath('language', 'en');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'locale' => 'en',
+        ]);
+    }
+
+    public function test_unsupported_advertisement_language_is_rejected(): void
+    {
+        [$user, , $children] = $this->familyWithChildren();
+        $payload = $this->payload(
+            $children,
+            City::factory()->create(),
+            null,
+            null,
+            AdvertisementType::FAMILY_TO_FAMILY,
+        );
+
+        $this->actingAs($user)
+            ->postJson('/api/advertisements', [...$payload, 'language' => 'fr'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['language']);
     }
 
     public function test_public_feed_can_filter_advertisements_by_city(): void

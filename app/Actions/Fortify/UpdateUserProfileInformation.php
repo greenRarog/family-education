@@ -2,6 +2,8 @@
 
 namespace App\Actions\Fortify;
 
+use App\Enums\TeacherProfileVisibilityStatus;
+use App\Enums\UserType;
 use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Facades\Validator;
@@ -40,6 +42,18 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'name' => $input['name'],
                 'email' => $input['email'],
             ])->save();
+        }
+
+        if (
+            $user->wasChanged('name') &&
+            $user->user_type === UserType::TEACHER &&
+            $user->teacherProfile?->public_profile_requested
+        ) {
+            $user->teacherProfile->update([
+                'public_profile_status' => TeacherProfileVisibilityStatus::PENDING,
+                'public_profile_reviewed_at' => null,
+                'public_profile_reviewed_by' => null,
+            ]);
         }
     }
 

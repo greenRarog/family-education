@@ -6,10 +6,15 @@ namespace Tests\Feature;
 
 use App\Enums\AdvertisementResponseStatus;
 use App\Enums\AdvertisementStatus;
+use App\Enums\AdvertisementType;
+use App\Enums\UserType;
 use App\Models\Advertisement;
 use App\Models\AdvertisementResponse;
 use App\Models\Conversation;
 use App\Models\Family;
+use App\Models\City;
+use App\Models\Subject;
+use App\Models\TeacherProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -17,6 +22,50 @@ use Tests\TestCase;
 class AdvertisementResponseTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_family_can_respond_to_published_teacher_service_ad(): void
+    {
+        $teacher = User::factory()->create(['user_type' => UserType::TEACHER]);
+        $city = City::factory()->create();
+        $subject = Subject::factory()->create();
+        $profile = TeacherProfile::query()->create([
+            'user_id' => $teacher->id,
+            'surname' => 'Петрова',
+            'city_id' => $city->id,
+        ]);
+        $profile->subjects()->sync([$subject->id]);
+        $advertisement = Advertisement::factory()->create([
+            'user_id' => $teacher->id,
+            'type' => AdvertisementType::TEACHER_TO_SERVICE,
+            'status' => AdvertisementStatus::PUBLISHED,
+            'format' => 'online',
+            'lesson_type' => 'individual',
+            'participant_age_from' => null,
+            'participant_age_to' => null,
+        ]);
+        $advertisement->subjects()->sync([$subject->id]);
+        [$family] = $this->familyWithUser();
+
+        $this->actingAs($family)->postJson("/api/advertisements/{$advertisement->id}/responses", [
+            'message' => 'Хотим заниматься.',
+        ])->assertCreated();
+    }
+
+    public function test_teacher_cannot_respond_to_another_teacher_service_ad(): void
+    {
+        $owner = User::factory()->create(['user_type' => UserType::TEACHER]);
+        $teacher = User::factory()->create(['user_type' => UserType::TEACHER]);
+        $advertisement = Advertisement::factory()->create([
+            'user_id' => $owner->id,
+            'type' => AdvertisementType::TEACHER_TO_SERVICE,
+            'status' => AdvertisementStatus::PUBLISHED,
+        ]);
+
+        $this->actingAs($teacher)->postJson("/api/advertisements/{$advertisement->id}/responses", [
+            'message' => 'Хотел бы откликнуться.',
+        ])->assertForbidden();
+        $this->assertDatabaseCount('advertisement_responses', 0);
+    }
 
     public function test_authenticated_user_can_respond_to_published_advertisement(): void
     {

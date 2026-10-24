@@ -6,6 +6,8 @@ namespace App\Http\Controllers\v1\Api;
 
 use App\Enums\AdvertisementResponseStatus;
 use App\Enums\AdvertisementStatus;
+use App\Enums\AdvertisementType;
+use App\Enums\UserType;
 use App\Events\NewResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreAdvertisementResponseRequest;
@@ -24,6 +26,12 @@ class AdvertisementResponseController extends Controller
         $user = $request->user();
         if ($advertisement->user_id === $user->id) {
             abort(422, 'Нельзя откликнуться на собственное объявление.');
+        }
+        if (
+            $advertisement->type === AdvertisementType::TEACHER_TO_SERVICE &&
+            $user->user_type !== UserType::FAMILY
+        ) {
+            abort(403, 'На услуги педагога могут откликаться семьи.');
         }
         if ($advertisement->status !== AdvertisementStatus::PUBLISHED) {
             abort(422, 'Нельзя откликнуться на это объявление.');

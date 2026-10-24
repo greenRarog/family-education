@@ -21,6 +21,8 @@ Route::get('/api/user', function () {
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'user_type' => $user->user_type,
+            'locale' => $user->locale,
         ],
     ]);
 });
