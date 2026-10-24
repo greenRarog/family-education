@@ -67,7 +67,7 @@ Route::middleware(['auth', 'admin', 'web'])
         Route::apiResource('metro-stations', MetroStationController::class);
         Route::apiResource('subjects', SubjectController::class);
         Route::apiResource('blocked-terms', BlockedTermController::class);
-    Route::get('teacher-profiles', [AdminTeacherProfileController::class, 'index']);
-    Route::post('teacher-profiles/{teacherProfile:user_id}/approve', [AdminTeacherProfileController::class, 'approve']);
-    Route::post('teacher-profiles/{teacherProfile:user_id}/reject', [AdminTeacherProfileController::class, 'reject']);
+        Route::get('teacher-profiles', [AdminTeacherProfileController::class, 'index']);
+        Route::post('teacher-profiles/{teacherProfile:user_id}/approve', [AdminTeacherProfileController::class, 'approve']);
+        Route::post('teacher-profiles/{teacherProfile:user_id}/reject', [AdminTeacherProfileController::class, 'reject']);
     });
