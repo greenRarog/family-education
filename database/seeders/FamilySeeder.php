@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\UserType;
 use App\Models\City;
 use App\Models\District;
 use App\Models\Family;
 use App\Models\MetroStation;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class FamilySeeder extends Seeder
 {
@@ -35,37 +37,31 @@ class FamilySeeder extends Seeder
             ->where('name', 'Кропоткинская')
             ->firstOrFail();
 
-        Family::factory()->create([
-            'user_id' => User::factory()->create([
-                'name' => 'Алексей',
-                'email' => 'alexey@example.com',
-            ])->id,
-            'surname' => 'Иванов',
-            'city_id' => $moscow->id,
-            'district_id' => $khamovniki->id,
-            'metro_station_id' => $kropotkinskaya->id,
-        ]);
+        $families = [
+            ['Алексей', 'alexey@example.com', 'Иванов', $moscow, $khamovniki, $kropotkinskaya],
+            ['Мария', 'maria@example.com', 'Петрова', $spb, $centralSpb, null],
+            ['Дмитрий', 'dmitry@example.com', 'Соколов', $krasnodar, $centralKrasnodar, null],
+        ];
 
-        Family::factory()->create([
-            'user_id' => User::factory()->create([
-                'name' => 'Мария',
-                'email' => 'maria@example.com',
-            ])->id,
-            'surname' => 'Петрова',
-            'city_id' => $spb->id,
-            'district_id' => $centralSpb->id,
-            'metro_station_id' => null,
-        ]);
+        foreach ($families as [$name, $email, $surname, $city, $district, $station]) {
+            $user = User::query()->firstOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $name,
+                    'password' => Str::random(48),
+                    'user_type' => UserType::FAMILY,
+                ],
+            );
 
-        Family::factory()->create([
-            'user_id' => User::factory()->create([
-                'name' => 'Дмитрий',
-                'email' => 'dmitry@example.com',
-            ])->id,
-            'surname' => 'Соколов',
-            'city_id' => $krasnodar->id,
-            'district_id' => $centralKrasnodar->id,
-            'metro_station_id' => null,
-        ]);
+            Family::query()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'surname' => $surname,
+                    'city_id' => $city->id,
+                    'district_id' => $district->id,
+                    'metro_station_id' => $station?->id,
+                ],
+            );
+        }
     }
 }

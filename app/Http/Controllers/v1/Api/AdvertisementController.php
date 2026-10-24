@@ -9,12 +9,14 @@ use App\Enums\AdvertisementStudyFormat;
 use App\Enums\AdvertisementType;
 use App\Enums\LessonType;
 use App\Enums\SupportedLanguage;
+use App\Enums\TeacherProfileVisibilityStatus;
 use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\Advertisement;
 use App\Models\AdvertisementResponse;
 use App\Models\District;
 use App\Models\MetroStation;
+use App\Models\User;
 use App\Services\BannedWordChecker;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -279,7 +281,7 @@ class AdvertisementController extends Controller
         if (
             $profile === null ||
             ! $profile->public_profile_requested ||
-            $profile->public_profile_status !== \App\Enums\TeacherProfileVisibilityStatus::APPROVED
+            $profile->public_profile_status !== TeacherProfileVisibilityStatus::APPROVED
         ) {
             $advertisement->setAttribute('public_teacher', null);
 
@@ -415,7 +417,9 @@ class AdvertisementController extends Controller
         ]);
 
         if ($isFamilyAdvertisement) {
-            $family = $request->user()->family;
+            /** @var User $user */
+            $user = $request->user();
+            $family = $user->family;
 
             if (
                 ! $family ||
@@ -428,7 +432,9 @@ class AdvertisementController extends Controller
                 ]);
             }
         } elseif ($isTeacherService) {
-            $profile = $request->user()->teacherProfile;
+            /** @var User $user */
+            $user = $request->user();
+            $profile = $user->teacherProfile;
             $allowedSubjectIds = $profile?->subjects()->pluck('subjects.id')->all() ?? [];
             $invalidSubjectIds = array_diff($data['subject_ids'], $allowedSubjectIds);
 

@@ -16,7 +16,6 @@ class CitySeeder extends Seeder
      */
     public function run(): void
     {
-        City::truncate();
         $path = database_path('data/russia_cities.json');
 
         $cities = json_decode(

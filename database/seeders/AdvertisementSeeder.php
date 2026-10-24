@@ -14,6 +14,7 @@ use App\Models\District;
 use App\Models\Family;
 use App\Models\MetroStation;
 use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class AdvertisementSeeder extends Seeder
@@ -40,35 +41,25 @@ class AdvertisementSeeder extends Seeder
             ->where('name', 'Кропоткинская')
             ->firstOrFail();
 
-        $families = Family::query()
-            ->whereIn('user_id', function ($query) {
-                $query->select('id')
-                    ->from('users')
-                    ->whereIn('email', [
-                        'alexey@example.com',
-                        'maria@example.com',
-                        'dmitry@example.com',
-                    ]);
-            })
+        $demoUsers = User::query()
+            ->whereIn('email', [
+                'alexey@example.com',
+                'maria@example.com',
+                'dmitry@example.com',
+            ])
             ->get()
-            ->keyBy('user_id');
-
-        $alexey = $families->get(
-            $families->firstWhere('user_id', function () {
-                return false;
-            })?->user_id
-        );
+            ->keyBy('email');
 
         $moscowFamily = Family::query()
-            ->where('city_id', $moscow->id)
+            ->where('user_id', $demoUsers['alexey@example.com']->id)
             ->firstOrFail();
 
         $spbFamily = Family::query()
-            ->where('city_id', $spb->id)
+            ->where('user_id', $demoUsers['maria@example.com']->id)
             ->firstOrFail();
 
         $krasnodarFamily = Family::query()
-            ->where('city_id', $krasnodar->id)
+            ->where('user_id', $demoUsers['dmitry@example.com']->id)
             ->firstOrFail();
 
         $moscowChild = Child::where('family_id', $moscowFamily->id)->firstOrFail();
@@ -194,19 +185,20 @@ class AdvertisementSeeder extends Seeder
 
             unset($data['children'], $data['subjects']);
 
-            $advertisement = Advertisement::query()->create([
-                ...$data,
-                'status' => AdvertisementStatus::PUBLISHED,
-                'published_at' => $publishedAt,
-            ]);
+            $advertisement = Advertisement::query()->updateOrCreate(
+                [
+                    'user_id' => $data['user_id'],
+                    'description' => $data['description'],
+                ],
+                [
+                    ...$data,
+                    'status' => AdvertisementStatus::PUBLISHED,
+                    'published_at' => $publishedAt,
+                ],
+            );
 
-            if ($children !== []) {
-                $advertisement->children()->attach($children);
-            }
-
-            if ($subjects !== []) {
-                $advertisement->subjects()->attach($subjects);
-            }
+            $advertisement->children()->sync($children);
+            $advertisement->subjects()->sync($subjects);
         }
     }
 }

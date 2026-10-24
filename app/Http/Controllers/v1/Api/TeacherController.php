@@ -21,6 +21,7 @@ class TeacherController extends Controller
 {
     public function show(Request $request): JsonResponse
     {
+        /** @var User $user */
         $user = $request->user();
         abort_unless($user->user_type === UserType::TEACHER, 403);
 
@@ -36,6 +37,7 @@ class TeacherController extends Controller
      */
     public function update(Request $request): JsonResponse
     {
+        /** @var User $user */
         $user = $request->user();
         abort_unless($user->user_type === UserType::TEACHER, 403);
 
@@ -155,7 +157,7 @@ class TeacherController extends Controller
     {
         return [
             'user_id' => $profile->user_id,
-            'name' => $profile->user?->name,
+            'name' => $profile->user->name,
             'surname' => $profile->surname,
             'city_id' => $profile->city_id,
             'district_id' => $profile->district_id,
@@ -173,7 +175,8 @@ class TeacherController extends Controller
     }
 
     /**
-     * @param array{city_id: int|string, district_id?: int|string|null, metro_station_id?: int|string|null} $data
+     * @param  array{city_id: int|string, district_id?: int|string|null, metro_station_id?: int|string|null}  $data
+     *
      * @throws ValidationException
      */
     private function validateLocation(array $data): void

@@ -19,7 +19,6 @@ class MetroStationSeeder extends Seeder
      */
     public function run(): void
     {
-        MetroStation::truncate();
         $path = database_path('data/metro.json');
 
         $metros = json_decode(

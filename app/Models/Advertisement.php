@@ -28,6 +28,8 @@ use Illuminate\Support\Carbon;
  * @property AdvertisementStatus $status
  * @property string|null $subject
  * @property AdvertisementStudyFormat|null $format
+ * @property string $language
+ * @property LessonType|null $lesson_type
  * @property int $city_id
  * @property int|null $district_id
  * @property int|null $metro_station_id
@@ -106,36 +108,43 @@ class Advertisement extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<City, $this> */
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
     }
 
+    /** @return BelongsTo<District, $this> */
     public function district(): BelongsTo
     {
         return $this->belongsTo(District::class);
     }
 
+    /** @return BelongsTo<MetroStation, $this> */
     public function metroStation(): BelongsTo
     {
         return $this->belongsTo(MetroStation::class);
     }
 
+    /** @return BelongsToMany<Child, $this> */
     public function children(): BelongsToMany
     {
         return $this->belongsToMany(Child::class);
     }
 
+    /** @return BelongsToMany<Subject, $this> */
     public function subjects(): BelongsToMany
     {
         return $this->belongsToMany(Subject::class);
     }
 
+    /** @return HasMany<AdvertisementResponse, $this> */
     public function responses(): HasMany
     {
         return $this->hasMany(AdvertisementResponse::class);

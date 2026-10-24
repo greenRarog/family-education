@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Fortify;
 
-use App\Enums\UserType;
 use App\Enums\SupportedLanguage;
+use App\Enums\UserType;
 use App\Models\Child;
 use App\Models\District;
 use App\Models\Family;
@@ -44,7 +44,7 @@ class CreateNewUser implements CreatesNewUsers
      *         name: string,
      *         birth_date: string,
      *         sex: string
-     *     }>
+     *     }>,
      *     subject_ids?: array<int, int|string>,
      *     about?: string|null,
      *     education?: string|null,

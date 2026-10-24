@@ -35,6 +35,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property UserType $user_type
+ * @property string|null $locale
  * @property-read Collection<int, AdvertisementResponse> $advertisementResponses
  * @property-read int|null $advertisement_responses_count
  * @property-read Collection<int, Advertisement> $advertisements
@@ -43,6 +44,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Message> $messages
  * @property-read int|null $messages_count
  * @property-read NotificationSetting|null $notificationSetting
+ * @property-read TeacherProfile|null $teacherProfile
  * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  *
@@ -93,21 +95,25 @@ class User extends Authenticatable implements HasLocalePreference
         return $this->locale ?? 'ru';
     }
 
+    /** @return HasOne<Family, $this> */
     public function family(): HasOne
     {
         return $this->hasOne(Family::class);
     }
 
+    /** @return HasOne<TeacherProfile, $this> */
     public function teacherProfile(): HasOne
     {
         return $this->hasOne(TeacherProfile::class);
     }
 
+    /** @return HasOne<NotificationSetting, $this> */
     public function notificationSetting(): HasOne
     {
         return $this->hasOne(NotificationSetting::class);
     }
 
+    /** @return HasMany<Advertisement, $this> */
     public function advertisements(): HasMany
     {
         return $this->hasMany(Advertisement::class);

@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Administrator',
                 'password' => 'Admin123!', // todo убрать в .env
                 'user_type' => UserType::ADMIN,
+                'locale' => 'ru',
             ],
         );
         $this->call([
