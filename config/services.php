@@ -51,6 +51,7 @@ return [
     ],
 
     'telegram' => [
-        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'token' => env('TELEGRAM_BOT_TOKEN'),
+        'proxy' => env('TELEGRAM_PROXY_URL'),
     ],
 ];
