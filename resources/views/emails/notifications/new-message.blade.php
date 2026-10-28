@@ -10,7 +10,7 @@
     </h1>
 
     <p style="margin: 0 0 24px; color: #6b7280; font-size: 15px;">
-        {{ __('notifications.new_message.line', ['user' => $message->user->name]) }}
+        {{ __('notifications.new_message.line', ['user' => $chatMessage->user->name]) }}
     </p>
 
     <p style="margin: 0 0 8px; color: #6b7280; font-size: 13px;">
@@ -21,13 +21,13 @@
         style="padding: 16px; background-color: #f7f7f8; border: 1px solid #e5e7eb; border-radius: 8px;"
     >
         <p style="margin: 0; color: #171717; font-size: 14px; white-space: pre-wrap; word-break: break-word;">
-            {{ $message->body }}
+            {{ $chatMessage->body }}
         </p>
     </div>
 
     <div style="margin-top: 24px;">
         <a
-            href="{{ url("/conversations/{$message->conversation_id}") }}"
+            href="{{ url("/conversations/{$chatMessage->conversation_id}") }}"
             style="display: inline-block; padding: 10px 16px; background-color: #171717; color: #ffffff; border-radius: 8px; font-size: 14px; font-weight: 500; text-decoration: none;"
         >
             {{ __('notifications.new_message.action') }}

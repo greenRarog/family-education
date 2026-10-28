@@ -21,17 +21,17 @@ class MessageController extends Controller
         $this->authorizeConversation($request, $conversation);
         $conversation->load('advertisementResponse');
         $advertisementResponse = $conversation->advertisementResponse;
+        if ($advertisementResponse->status === AdvertisementResponseStatus::REJECTED) {
+            abort(
+                422,
+                'Диалог завершён.'
+            );
+        }
         if ($advertisementResponse->status !== AdvertisementResponseStatus::ACCEPTED
             && $advertisementResponse->user_id === $request->user()->id) {
             abort(
                 422,
                 'Нельзя отправлять сообщения до принятия отклика.'
-            );
-        }
-        if ($advertisementResponse->status === AdvertisementResponseStatus::REJECTED) {
-            abort(
-                422,
-                'Диалог завершён.'
             );
         }
         $message = Message::query()->create([
@@ -51,16 +51,32 @@ class MessageController extends Controller
     public function read(Request $request, Conversation $conversation): JsonResponse
     {
         $this->authorizeConversation($request, $conversation);
+        $data = $request->validate([
+            'through_id' => ['nullable', 'integer', 'min:1'],
+        ]);
+        // Confirm an existing boundary in this conversation, never a future ID.
+        // Include own messages so a client can acknowledge its entire fetched page.
+        $boundary = $conversation->messages();
+        if (isset($data['through_id'])) {
+            $boundary->where('id', '<=', $data['through_id']);
+        }
+        $throughId = $boundary->max('id');
+        $throughId = $throughId === null ? null : (int) $throughId;
+        // Match the timestamp precision stored by Eloquent and the read_at column.
+        $readAt = now()->startOfSecond();
         Message::query()
             ->where('conversation_id', $conversation->id)
+            ->where('id', '<=', $throughId ?? 0)
             ->where('user_id', '!=', $request->user()->id)
             ->whereNull('read_at')
             ->update([
-                'read_at' => now(),
+                'read_at' => $readAt,
             ]);
 
         return response()->json([
             'message' => 'Сообщения отмечены как прочитанные.',
+            'through_id' => $throughId,
+            'read_at' => $readAt,
         ]);
     }
 

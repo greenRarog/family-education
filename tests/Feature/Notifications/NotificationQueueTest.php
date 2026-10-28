@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Feature\Notifications;
+namespace Tests\Feature\Notifications;
 
 use App\Enums\AdvertisementResponseStatus;
 use App\Models\Advertisement;

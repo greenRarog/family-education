@@ -45,6 +45,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/conversations', [ConversationController::class, 'index']);
     Route::get('/conversations/unread-count', [ConversationController::class, 'unreadCount']);
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show']);
+    Route::get('/conversations/{conversation}/messages', [ConversationController::class, 'messages']);
     Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store']);
     Route::post('/conversations/{conversation}/read', [MessageController::class, 'read']);
 

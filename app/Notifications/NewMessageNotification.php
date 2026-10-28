@@ -39,7 +39,7 @@ class NewMessageNotification extends Notification implements ShouldQueue
             ->subject(__('notifications.new_message.subject'))
             ->view('emails.notifications.new-message', [
                 'notifiable' => $notifiable,
-                'message' => $this->message,
+                'chatMessage' => $this->message,
                 'subject' => __('notifications.new_message.subject'),
             ]);
     }

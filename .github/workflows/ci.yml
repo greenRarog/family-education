@@ -1,24 +1,47 @@
-name: CI
+name: Backend CI
 
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   tests:
     runs-on: ubuntu-latest
 
+    # Artisan migration/setup commands do not read PHPUnit XML settings.
+    env:
+      APP_ENV: testing
+      APP_MAINTENANCE_DRIVER: file
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: family_education_test
+      DB_USERNAME: family_education
+      DB_PASSWORD: secret
+      DB_URL: ""
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+      BROADCAST_CONNECTION: "null"
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+
     services:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_DB: family_education
+          POSTGRES_DB: family_education_test
           POSTGRES_USER: family_education
           POSTGRES_PASSWORD: secret
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U family_education -d family_education"
+          --health-cmd="pg_isready -U family_education -d family_education_test"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=10
@@ -36,74 +59,37 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_pgsql, pgsql, redis
+          extensions: pdo_pgsql, pgsql, pdo_sqlite, redis
           coverage: none
           tools: composer
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
 
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Build frontend
-        run: npm run build
-
       - name: Prepare environment
         run: |
           cp .env.example .env
+          php artisan config:clear
           php artisan key:generate
 
-      - name: Configure database
+      - name: Style and static analysis
+        run: |
+          composer lint
+          composer analyse
+
+      - name: Test with SQLite
+        run: composer test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+          DB_URL: ""
+
+      - name: Configure PostgreSQL test database
         run: |
           php artisan config:clear
-          php artisan migrate --force
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_DATABASE: family_education
-          DB_USERNAME: family_education
-          DB_PASSWORD: secret
-          REDIS_HOST: 127.0.0.1
-          REDIS_PORT: 6379
+          php artisan migrate --database=pgsql --force --no-interaction
 
-      - name: Check code
-        run: composer check
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_DATABASE: family_education
-          DB_USERNAME: family_education
-          DB_PASSWORD: secret
-          REDIS_HOST: 127.0.0.1
-          REDIS_PORT: 6379
-
-  deploy:
-    needs: tests
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Setup SSH
+      - name: Test with PostgreSQL
         run: |
-          mkdir -p ~/.ssh
-
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-
-          echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-
-      - name: Deploy
-        run: |
-          ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            "cd /var/www/family-education && ./scripts/deploy.sh"
+          php artisan config:clear
+          php artisan test --configuration=phpunit.pgsql.xml

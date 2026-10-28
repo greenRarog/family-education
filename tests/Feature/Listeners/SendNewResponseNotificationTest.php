@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Feature\Listeners;
+namespace Tests\Feature\Listeners;
 
 use App\Enums\AdvertisementResponseStatus;
 use App\Events\NewResponse;

@@ -36,6 +36,8 @@ class ConversationResource extends JsonResource
             'messages' => MessageResource::collection(
                 $this->whenLoaded('messages')
             ),
+            'last_message' => $this->whenLoaded('lastMessage', fn () => new MessageResource($r->lastMessage)),
+            'unread_count' => (int) $r->getAttribute('unread_messages_count'),
             'viewer' => [
                 'id' => $request->user()?->id,
                 'is_advertisement_owner' => $advertisement->user_id === $request->user()?->id,

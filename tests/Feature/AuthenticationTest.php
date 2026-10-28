@@ -100,6 +100,10 @@ class AuthenticationTest extends TestCase
 
     public function test_user_can_login(): void
     {
+        $this->mock(TurnstileService::class, function ($mock) {
+            $mock->shouldReceive('verify')->once()->with('valid-login-token')->andReturn(true);
+        });
+
         $user = User::factory()->create([
             'email' => 'ivan@example.com',
             'password' => 'Password123!',
@@ -108,6 +112,7 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
 
         $response = $this->postJson('/login', [
+            'cf-turnstile-response' => 'valid-login-token',
             'email' => 'ivan@example.com',
             'password' => 'Password123!',
         ]);
@@ -119,17 +124,59 @@ class AuthenticationTest extends TestCase
 
     public function test_user_cannot_login_with_invalid_credentials(): void
     {
+        $this->mock(TurnstileService::class, function ($mock) {
+            $mock->shouldReceive('verify')->once()->with('valid-login-token')->andReturn(true);
+        });
+
         $user = User::factory()->create([
             'email' => 'ivan@example.com',
             'password' => 'Password123!',
         ]);
 
         $response = $this->postJson('/login', [
+            'cf-turnstile-response' => 'valid-login-token',
             'email' => $user->email,
             'password' => 'WrongPassword123!',
         ]);
 
-        $response->assertStatus(422);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['email'])
+            ->assertJsonMissingValidationErrors(['cf-turnstile-response']);
+
+        $this->assertGuest();
+    }
+
+    public function test_login_requires_a_turnstile_token(): void
+    {
+        $this->mock(TurnstileService::class, function ($mock) {
+            $mock->shouldNotReceive('verify');
+        });
+        $user = User::factory()->create(['password' => 'Password123!']);
+
+        $this->postJson('/login', [
+            'email' => $user->email,
+            'password' => 'Password123!',
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors(['cf-turnstile-response'])
+            ->assertJsonMissingValidationErrors(['email']);
+
+        $this->assertGuest();
+    }
+
+    public function test_login_requires_successful_turnstile_verification(): void
+    {
+        $this->mock(TurnstileService::class, function ($mock) {
+            $mock->shouldReceive('verify')->once()->with('invalid-login-token')->andReturn(false);
+        });
+        $user = User::factory()->create(['password' => 'Password123!']);
+
+        $this->postJson('/login', [
+            'cf-turnstile-response' => 'invalid-login-token',
+            'email' => $user->email,
+            'password' => 'Password123!',
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors(['cf-turnstile-response'])
+            ->assertJsonMissingValidationErrors(['email']);
 
         $this->assertGuest();
     }

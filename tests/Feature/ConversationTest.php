@@ -152,7 +152,7 @@ class ConversationTest extends TestCase
             ->getJson('/api/conversations')
             ->assertOk();
 
-        $conversationIds = collect($response->json('conversations'))->pluck('id');
+        $conversationIds = collect($response->json('conversations.data'))->pluck('id');
         $this->assertTrue($conversationIds->contains($ownConversation->id));
         $this->assertFalse($conversationIds->contains($otherConversation->id));
     }

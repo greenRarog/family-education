@@ -12,6 +12,7 @@ use App\Enums\SupportedLanguage;
 use App\Enums\TeacherProfileVisibilityStatus;
 use App\Enums\UserType;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\PublicAdvertisementResource;
 use App\Models\Advertisement;
 use App\Models\AdvertisementResponse;
 use App\Models\District;
@@ -43,7 +44,7 @@ class AdvertisementController extends Controller
 
         $query = Advertisement::query()
             ->where('status', AdvertisementStatus::PUBLISHED)
-            ->with($this->relations());
+            ->with(['subjects', 'city', 'district', 'metroStation']);
 
         if (! empty($validated['type'])) {
             $query->where('type', $validated['type']);
@@ -64,8 +65,16 @@ class AdvertisementController extends Controller
         if (isset($validated['age'])) {
             $age = $validated['age'];
 
-            $query->where('participant_age_from', '<=', $age)
-                ->where('participant_age_to', '>=', $age);
+            $query->where(function ($query) use ($age) {
+                $query->where(function ($query) use ($age) {
+                    $query->where('participant_age_from', '<=', $age)
+                        ->where('participant_age_to', '>=', $age);
+                })->orWhere(function ($query) {
+                    $query->where('type', AdvertisementType::TEACHER_TO_SERVICE)
+                        ->whereNull('participant_age_from')
+                        ->whereNull('participant_age_to');
+                });
+            });
         }
 
         if (! empty($validated['subject_id'])) {
@@ -75,7 +84,9 @@ class AdvertisementController extends Controller
         }
 
         $advertisements = $query->latest('published_at')->paginate(20);
-        $advertisements->through(fn (Advertisement $advertisement) => $this->appendPublicTeacher($advertisement));
+        $advertisements->through(fn (Advertisement $advertisement) => new PublicAdvertisementResource(
+            $this->appendPublicTeacher($advertisement)
+        ));
 
         return response()->json(['advertisements' => $advertisements]);
     }
@@ -152,7 +163,9 @@ class AdvertisementController extends Controller
         }
 
         return response()->json([
-            'advertisement' => $this->appendPublicTeacher($advertisement->load($this->relations())),
+            'advertisement' => new PublicAdvertisementResource($this->appendPublicTeacher(
+                $advertisement->load(['subjects', 'city', 'district', 'metroStation'])
+            )),
             'viewer' => [
                 'authenticated' => $user !== null,
                 'is_owner' => $isOwner,
