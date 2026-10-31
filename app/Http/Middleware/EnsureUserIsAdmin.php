@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Enums\UserType;
+use App\Exceptions\EmailVerificationRequired;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,6 +18,10 @@ class EnsureUserIsAdmin
             $request->user()?->user_type === UserType::ADMIN,
             403
         );
+
+        if (! $request->isMethodSafe() && ! $request->user()->hasVerifiedEmail()) {
+            throw new EmailVerificationRequired;
+        }
 
         return $next($request);
     }

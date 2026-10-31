@@ -8,6 +8,7 @@ use App\Enums\AdvertisementStatus;
 use App\Enums\AdvertisementType;
 use App\Enums\TeacherProfileVisibilityStatus;
 use App\Enums\UserType;
+use App\Exceptions\EmailVerificationRequired;
 use App\Http\Controllers\Controller;
 use App\Models\District;
 use App\Models\MetroStation;
@@ -55,6 +56,10 @@ class TeacherController extends Controller
             'education' => ['nullable', 'string', 'max:3000'],
             'public_profile_requested' => ['required', 'boolean'],
         ]);
+
+        if ($data['public_profile_requested'] && ! $user->hasVerifiedEmail()) {
+            throw new EmailVerificationRequired;
+        }
 
         $this->validateLocation($data);
 
@@ -112,6 +117,7 @@ class TeacherController extends Controller
         abort_if($profile === null, 404);
 
         $isOwner = $request->user()?->id === $user->id;
+        abort_if($user->isBlocked() && ! $isOwner, 404);
         abort_unless(
             $isOwner || (
                 $profile->public_profile_requested
@@ -123,6 +129,7 @@ class TeacherController extends Controller
         $advertisements = $user->advertisements()
             ->where('type', AdvertisementType::TEACHER_TO_SERVICE)
             ->where('status', AdvertisementStatus::PUBLISHED)
+            ->whereNull('hide_action_id')
             ->with(['city', 'subjects'])
             ->latest('published_at')
             ->get()

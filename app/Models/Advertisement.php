@@ -17,11 +17,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 
 /**
  * docker compose exec app php artisan ide-helper:models "App\Models\Advertisement"
  *
+ * @property int|null $hide_action_id
+ * @property-read AdminAction|null $hidingAction
  * @property int $id
  * @property int $user_id
  * @property AdvertisementType $type
@@ -79,6 +82,8 @@ class Advertisement extends Model
     /** @use HasFactory<AdvertisementFactory> */
     use HasFactory;
 
+    protected $hidden = ['hide_action_id', 'hidingAction', 'hiding_action'];
+
     protected $fillable = [
         'user_id',
         'type',
@@ -99,12 +104,39 @@ class Advertisement extends Model
     protected function casts(): array
     {
         return [
+            'hide_action_id' => 'integer',
             'type' => AdvertisementType::class,
             'status' => AdvertisementStatus::class,
             'format' => AdvertisementStudyFormat::class,
             'lesson_type' => LessonType::class,
             'published_at' => 'datetime',
             'closed_at' => 'datetime',
+        ];
+    }
+
+    public function isHidden(): bool
+    {
+        return $this->hide_action_id !== null;
+    }
+
+    /** @return BelongsTo<AdminAction, $this> */
+    public function hidingAction(): BelongsTo
+    {
+        return $this->belongsTo(AdminAction::class, 'hide_action_id');
+    }
+
+    /** Only expose to the owner or through an authorized admin endpoint.
+     * @return array<string, mixed>
+     */
+    public function moderationDetails(): array
+    {
+        $decision = $this->hidingAction;
+
+        return [
+            'is_hidden' => $this->isHidden(), 'decision_id' => $decision?->id,
+            'hidden_at' => $decision?->occurred_at->toISOString(),
+            'reason_code' => $decision?->reason_code, 'reason' => $decision?->reason,
+            'appeal_email' => config('moderation.appeal_email'),
         ];
     }
 
@@ -148,5 +180,11 @@ class Advertisement extends Model
     public function responses(): HasMany
     {
         return $this->hasMany(AdvertisementResponse::class);
+    }
+
+    /** @return MorphMany<Report, $this> */
+    public function reports(): MorphMany
+    {
+        return $this->morphMany(Report::class, 'target');
     }
 }

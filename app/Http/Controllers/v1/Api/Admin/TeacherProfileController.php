@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\v1\Api\Admin;
 
 use App\Enums\TeacherProfileVisibilityStatus;
+use App\Exceptions\EmailVerificationRequired;
 use App\Http\Controllers\Controller;
 use App\Models\TeacherProfile;
 use Illuminate\Http\JsonResponse;
@@ -37,6 +38,10 @@ class TeacherProfileController extends Controller
     public function approve(Request $request, TeacherProfile $teacherProfile): JsonResponse
     {
         abort_unless($teacherProfile->public_profile_status === TeacherProfileVisibilityStatus::PENDING, 422);
+
+        if (! $teacherProfile->user->hasVerifiedEmail()) {
+            throw new EmailVerificationRequired(profileOwner: true);
+        }
 
         $teacherProfile->update([
             'public_profile_status' => TeacherProfileVisibilityStatus::APPROVED,

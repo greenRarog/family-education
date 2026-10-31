@@ -20,7 +20,8 @@ class ConversationController extends Controller
         $conversations = Conversation::query()
             ->with([
                 'advertisementResponse.user',
-                'advertisementResponse.advertisement',
+                'advertisementResponse.advertisement.user',
+                'advertisementResponse.advertisement.hidingAction',
                 'lastMessage.user',
             ])->withExists([
                 'messages as has_unread_messages' => function ($query) use ($user) {
@@ -40,7 +41,7 @@ class ConversationController extends Controller
                         fn ($query) => $query->where('user_id', $user->id)
                     )
                     ->orWhereHas(
-                        'advertisementResponse.advertisement',
+                        'advertisementResponse.advertisement.user',
                         fn ($query) => $query->where('user_id', $user->id)
                     );
             })
@@ -56,11 +57,12 @@ class ConversationController extends Controller
 
     public function show(Request $request, Conversation $conversation): JsonResponse
     {
-        $this->authorizeConversation($request, $conversation);
+        abort_unless($conversation->hasParticipant($request->user()), 403);
         $data = $request->validate(['after_id' => ['nullable', 'integer', 'min:0']]);
         $conversation->load([
             'advertisementResponse.user',
-            'advertisementResponse.advertisement',
+            'advertisementResponse.advertisement.user',
+            'advertisementResponse.advertisement.hidingAction',
         ]);
 
         $after = isset($data['after_id']);
@@ -92,7 +94,7 @@ class ConversationController extends Controller
 
     public function messages(Request $request, Conversation $conversation): JsonResponse
     {
-        $this->authorizeConversation($request, $conversation);
+        abort_unless($conversation->hasParticipant($request->user()), 403);
         $data = $request->validate([
             'before_id' => ['nullable', 'integer', 'min:1', 'prohibits:after_id'],
             'after_id' => ['nullable', 'integer', 'min:0', 'prohibits:before_id'],
@@ -134,7 +136,7 @@ class ConversationController extends Controller
                         'advertisementResponse',
                         fn ($query) => $query->where('user_id', $user->id)
                     )->orWhereHas(
-                        'advertisementResponse.advertisement',
+                        'advertisementResponse.advertisement.user',
                         fn ($query) => $query->where('user_id', $user->id)
                     );
                 });
@@ -144,20 +146,5 @@ class ConversationController extends Controller
         return response()->json([
             'count' => $count,
         ]);
-    }
-
-    private function authorizeConversation(Request $request, Conversation $conversation): void
-    {
-        $user = $request->user();
-        $conversation->loadMissing([
-            'advertisementResponse.advertisement',
-        ]);
-        $response = $conversation->advertisementResponse;
-        $isResponseOwner = $response->user_id === $user->id;
-        $isAdvertisementOwner = $response->advertisement->user_id === $user->id;
-
-        if (! $isResponseOwner && ! $isAdvertisementOwner) {
-            abort(403);
-        }
     }
 }

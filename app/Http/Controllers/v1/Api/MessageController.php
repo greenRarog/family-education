@@ -18,7 +18,7 @@ class MessageController extends Controller
 {
     public function store(StoreMessageRequest $request, Conversation $conversation): JsonResponse
     {
-        $this->authorizeConversation($request, $conversation);
+        abort_unless($conversation->hasParticipant($request->user()), 403);
         $conversation->load('advertisementResponse');
         $advertisementResponse = $conversation->advertisementResponse;
         if ($advertisementResponse->status === AdvertisementResponseStatus::REJECTED) {
@@ -50,7 +50,7 @@ class MessageController extends Controller
 
     public function read(Request $request, Conversation $conversation): JsonResponse
     {
-        $this->authorizeConversation($request, $conversation);
+        abort_unless($conversation->hasParticipant($request->user()), 403);
         $data = $request->validate([
             'through_id' => ['nullable', 'integer', 'min:1'],
         ]);
@@ -78,20 +78,5 @@ class MessageController extends Controller
             'through_id' => $throughId,
             'read_at' => $readAt,
         ]);
-    }
-
-    private function authorizeConversation(Request $request, Conversation $conversation): void
-    {
-        $user = $request->user();
-        $conversation->loadMissing([
-            'advertisementResponse.advertisement',
-        ]);
-        $response = $conversation->advertisementResponse;
-        $isResponseOwner = $response->user_id === $user->id;
-        $isAdvertisementOwner = $response->advertisement->user_id === $user->id;
-
-        if (! $isResponseOwner && ! $isAdvertisementOwner) {
-            abort(403);
-        }
     }
 }

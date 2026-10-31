@@ -110,12 +110,14 @@ class CreateNewUser implements CreatesNewUsers
             $rules += [
                 'children' => ['required', 'array', 'min:1'],
                 'children.*.name' => ['required', 'string', 'max:255'],
-                'children.*.birth_date' => ['required', 'date'],
+                'children.*.birth_date' => ['required', 'date', 'before:tomorrow'],
                 'children.*.sex' => ['required', 'string', 'in:male,female'],
             ];
         }
 
-        $data = Validator::make($input, $rules)->validate();
+        $data = Validator::make($input, $rules, [
+            'children.*.birth_date.before' => 'Дата рождения не может быть в будущем.',
+        ])->validate();
 
         if (! $this->turnstile->verify($input['cf-turnstile-response'])) {
             Validator::make([], [])->after(function ($validator) {

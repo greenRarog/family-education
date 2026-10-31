@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Message;
+use App\Notifications\Concerns\ChecksEmailDelivery;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -13,14 +14,23 @@ use NotificationChannels\Telegram\TelegramMessage;
 
 class NewMessageNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use ChecksEmailDelivery, Queueable;
 
     public function __construct(
         public readonly Message $message,
-    ) {}
+    ) {
+        $this->captureModerationState();
+    }
 
     public function via(object $notifiable): array
     {
+        if (! $this->moderationAllows($notifiable)) {
+            return [];
+        }
+        $notifiable = $notifiable->fresh();
+        if ($notifiable === null) {
+            return [];
+        }
         $channels = [];
 
         if ($notifiable->emailNotificationsEnabled()) {

@@ -52,7 +52,7 @@ class PublicAdvertisementTest extends TestCase
         $advertisement->children()->attach($child);
         $advertisement->subjects()->attach($subject);
 
-        // Guest, unrelated user, and owner all receive the same public field whitelist.
+        // Children stay private; only the owner additionally receives their moderation decision.
         foreach ([null, User::factory()->create(), $family->user] as $viewer) {
             if ($viewer !== null) {
                 $this->actingAs($viewer);
@@ -66,7 +66,11 @@ class PublicAdvertisementTest extends TestCase
                     'id', 'type', 'status', 'description', 'language', 'format', 'lesson_type',
                     'participant_age_from', 'participant_age_to', 'published_at', 'closed_at',
                     'city', 'district', 'metro_station', 'subjects', 'public_teacher',
+                    ...($viewer?->id === $family->user_id ? ['moderation'] : []),
                 ], array_keys($data));
+                if ($viewer?->id === $family->user_id) {
+                    $this->assertFalse($data['moderation']['is_hidden']);
+                }
                 foreach (['city' => $family->city, 'district' => $district, 'metro_station' => $metroStation] as $key => $location) {
                     $this->assertSame(['id' => $location->id, 'name' => $location->name], $data[$key]);
                 }

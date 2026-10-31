@@ -92,12 +92,15 @@ class FamilyController extends Controller
             'children.*.birth_date' => [
                 'required',
                 'date',
+                'before:tomorrow',
             ],
 
             'children.*.sex' => [
                 'required',
                 Rule::enum(Sex::class),
             ],
+        ], [
+            'children.*.birth_date.before' => 'Дата рождения не может быть в будущем.',
         ])->validate();
 
         if (! empty($data['district_id'])) {

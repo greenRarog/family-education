@@ -11,6 +11,7 @@ use App\Enums\LessonType;
 use App\Enums\SupportedLanguage;
 use App\Enums\TeacherProfileVisibilityStatus;
 use App\Enums\UserType;
+use App\Exceptions\EmailVerificationRequired;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\PublicAdvertisementResource;
 use App\Models\Advertisement;
@@ -19,6 +20,7 @@ use App\Models\District;
 use App\Models\MetroStation;
 use App\Models\User;
 use App\Services\BannedWordChecker;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +46,8 @@ class AdvertisementController extends Controller
 
         $query = Advertisement::query()
             ->where('status', AdvertisementStatus::PUBLISHED)
+            ->whereNull('hide_action_id')
+            ->whereHas('user', fn ($query) => $query->whereNull('block_action_id'))
             ->with(['subjects', 'city', 'district', 'metroStation']);
 
         if (! empty($validated['type'])) {
@@ -84,6 +88,9 @@ class AdvertisementController extends Controller
         }
 
         $advertisements = $query->latest('published_at')->paginate(20);
+        (new Collection($advertisements->items()))
+            ->filter(fn (Advertisement $advertisement) => $advertisement->type === AdvertisementType::TEACHER_TO_SERVICE)
+            ->load(['user.teacherProfile.city', 'user.teacherProfile.subjects']);
         $advertisements->through(fn (Advertisement $advertisement) => new PublicAdvertisementResource(
             $this->appendPublicTeacher($advertisement)
         ));
@@ -98,7 +105,7 @@ class AdvertisementController extends Controller
                 ->advertisements()
                 ->with($this->relations())
                 ->latest()
-                ->paginate(20),
+                ->paginate(20)->through(fn (Advertisement $ad) => $ad->setAttribute('moderation', $ad->moderationDetails())),
         ]);
     }
 
@@ -149,9 +156,11 @@ class AdvertisementController extends Controller
     {
         $user = auth()->user();
         $isOwner = $user?->id === $advertisement->user_id;
+        abort_if(! $isOwner && ($advertisement->isHidden() || $advertisement->user->isBlocked()), 404);
 
         /** @var AdvertisementResponse|null $response */
         $response = $user !== null && ! $isOwner
+                    && ! $advertisement->isHidden()
             ? $advertisement->responses()
                 ->where('user_id', $user->id)
                 ->first()
@@ -171,6 +180,14 @@ class AdvertisementController extends Controller
                 'is_owner' => $isOwner,
                 'has_responded' => $hasResponded,
                 'has_conversation' => $hasConversation,
+                'can_respond' => $user !== null
+                    && ! $user->isBlocked()
+                    && $user->hasVerifiedEmail()
+                    && ! $isOwner
+                    && ! $advertisement->isHidden()
+                    && ! $hasResponded
+                    && $advertisement->status === AdvertisementStatus::PUBLISHED
+                    && $advertisement->type->allowsResponsesFrom($user->user_type),
             ],
         ]);
     }
@@ -180,7 +197,7 @@ class AdvertisementController extends Controller
         abort_unless($advertisement->user_id === $request->user()->id, 404);
 
         return response()->json([
-            'advertisement' => $advertisement->load($this->relations()),
+            'advertisement' => $advertisement->load($this->relations())->setAttribute('moderation', $advertisement->moderationDetails()),
         ]);
     }
 
@@ -190,6 +207,10 @@ class AdvertisementController extends Controller
     public function update(Request $request, Advertisement $advertisement): JsonResponse
     {
         $this->ensureOwner($request, $advertisement);
+
+        if ($advertisement->status === AdvertisementStatus::PUBLISHED && ! $request->user()->hasVerifiedEmail()) {
+            throw new EmailVerificationRequired;
+        }
 
         if ($advertisement->status === AdvertisementStatus::CLOSED) {
             return response()->json([
@@ -223,13 +244,21 @@ class AdvertisementController extends Controller
         });
 
         return response()->json([
-            'advertisement' => $advertisement->fresh()->load($this->relations()),
+            'advertisement' => $advertisement->fresh()->load($this->relations())->setAttribute('moderation', $advertisement->moderationDetails()),
         ]);
     }
 
     public function publish(Request $request, Advertisement $advertisement): JsonResponse
     {
         $this->ensureOwner($request, $advertisement);
+
+        if (! $request->user()->hasVerifiedEmail()) {
+            throw new EmailVerificationRequired;
+        }
+
+        if ($advertisement->isHidden()) {
+            return response()->json(['code' => 'advertisement_hidden', 'message' => 'Скрытое объявление нельзя публиковать.'], 403);
+        }
 
         if ($advertisement->status !== AdvertisementStatus::DRAFT) {
             return response()->json([
@@ -243,7 +272,7 @@ class AdvertisementController extends Controller
         ]);
 
         return response()->json([
-            'advertisement' => $advertisement->fresh()->load($this->relations()),
+            'advertisement' => $advertisement->fresh()->load($this->relations())->setAttribute('moderation', $advertisement->moderationDetails()),
         ]);
     }
 
@@ -263,7 +292,7 @@ class AdvertisementController extends Controller
         ]);
 
         return response()->json([
-            'advertisement' => $advertisement->fresh()->load($this->relations()),
+            'advertisement' => $advertisement->fresh()->load($this->relations())->setAttribute('moderation', $advertisement->moderationDetails()),
         ]);
     }
 
@@ -273,6 +302,7 @@ class AdvertisementController extends Controller
     private function relations(): array
     {
         return [
+            'hidingAction',
             'children',
             'subjects',
             'city',
@@ -287,12 +317,13 @@ class AdvertisementController extends Controller
             return $advertisement;
         }
 
-        $profile = $advertisement->user()
-            ->with(['teacherProfile.city', 'teacherProfile.subjects'])
-            ->first()?->teacherProfile;
+        $teacher = $advertisement->relationLoaded('user')
+            ? $advertisement->user
+            : $advertisement->user()->with(['teacherProfile.city', 'teacherProfile.subjects'])->first();
+        $profile = $teacher?->teacherProfile;
 
         if (
-            $profile === null ||
+            $profile === null || $teacher->isBlocked() ||
             ! $profile->public_profile_requested ||
             $profile->public_profile_status !== TeacherProfileVisibilityStatus::APPROVED
         ) {
@@ -303,7 +334,7 @@ class AdvertisementController extends Controller
 
         $advertisement->setAttribute('public_teacher', [
             'id' => $profile->user_id,
-            'name' => $profile->user->name,
+            'name' => $teacher->name,
             'surname' => $profile->surname,
             'city' => $profile->city,
             'subjects' => $profile->subjects,

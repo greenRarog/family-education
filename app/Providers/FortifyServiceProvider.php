@@ -7,6 +7,8 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Http\Middleware\VerifyTurnstileForLogin;
+use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -36,6 +38,11 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Fortify views are disabled; the reset form belongs to the frontend.
+        ResetPassword::createUrlUsing(static fn (User $user, string $token): string => rtrim(config('app.url'), '/').'/reset-password/'.rawurlencode($token).'?'.http_build_query(
+            ['email' => $user->getEmailForPasswordReset()], '', '&', PHP_QUERY_RFC3986,
+        ));
+
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);

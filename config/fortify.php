@@ -164,7 +164,7 @@ return [
     'features' => [
         Features::registration(),
         Features::resetPasswords(),
-        Features::emailVerification(),
+        // Email verification routes are defined in routes/web.php (relative signatures).
         // Features::updateProfileInformation(),
         // Features::updatePasswords(),
         // Features::twoFactorAuthentication([

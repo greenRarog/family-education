@@ -19,7 +19,7 @@ class SendNewResponseNotification
         ]);
 
         $response->advertisement->user->notify(
-            new NewResponseNotification($response)
+            new NewResponseNotification($response, $event->hideVersion ?? null)
         );
     }
 }

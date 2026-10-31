@@ -18,6 +18,7 @@ class PublicAdvertisementResource extends JsonResource
 
         // Public responses deliberately exclude children, owner IDs and pivot data.
         return [
+            'moderation' => $this->when($request->user()?->id === $advertisement->user_id, fn () => $advertisement->moderationDetails()),
             'id' => $advertisement->id,
             'type' => $advertisement->type,
             'status' => $advertisement->status,

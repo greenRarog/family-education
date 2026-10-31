@@ -48,6 +48,15 @@ class Conversation extends Model
         'advertisement_response_id',
     ];
 
+    public function hasParticipant(User $user): bool
+    {
+        $this->loadMissing('advertisementResponse.advertisement');
+        $response = $this->advertisementResponse;
+
+        return $response->user_id === $user->id
+            || $response->advertisement->user_id === $user->id;
+    }
+
     public function advertisementResponse(): BelongsTo
     {
         return $this->belongsTo(AdvertisementResponse::class);

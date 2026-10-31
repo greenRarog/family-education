@@ -6,9 +6,8 @@ namespace App\Http\Controllers\v1\Api;
 
 use App\Enums\AdvertisementResponseStatus;
 use App\Enums\AdvertisementStatus;
-use App\Enums\AdvertisementType;
-use App\Enums\UserType;
 use App\Events\NewResponse;
+use App\Exceptions\EmailVerificationRequired;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreAdvertisementResponseRequest;
 use App\Http\Resources\Api\AdvertisementResponseResource;
@@ -27,11 +26,11 @@ class AdvertisementResponseController extends Controller
         if ($advertisement->user_id === $user->id) {
             abort(422, 'Нельзя откликнуться на собственное объявление.');
         }
-        if (
-            $advertisement->type === AdvertisementType::TEACHER_TO_SERVICE &&
-            $user->user_type !== UserType::FAMILY
-        ) {
-            abort(403, 'На услуги педагога могут откликаться семьи.');
+        if (! $advertisement->type->allowsResponsesFrom($user->user_type)) {
+            abort(403, 'Ваш тип аккаунта не позволяет откликнуться на это объявление.');
+        }
+        if (! $user->hasVerifiedEmail()) {
+            throw new EmailVerificationRequired;
         }
         if ($advertisement->status !== AdvertisementStatus::PUBLISHED) {
             abort(422, 'Нельзя откликнуться на это объявление.');
@@ -46,11 +45,17 @@ class AdvertisementResponseController extends Controller
         }
 
         $response = DB::transaction(function () use ($request, $advertisement, $user) {
-            $response = AdvertisementResponse::query()->create([
+            // The unique pair is authoritative if another request passed exists
+            // concurrently. createOrFirst rolls back its insert to a savepoint.
+            $response = AdvertisementResponse::query()->createOrFirst([
                 'advertisement_id' => $advertisement->id,
                 'user_id' => $user->id,
+            ], [
                 'status' => AdvertisementResponseStatus::SENT,
             ]);
+            if (! $response->wasRecentlyCreated) {
+                abort(422, 'Вы уже откликались на это объявление.');
+            }
             $conversation = Conversation::query()->create([
                 'advertisement_response_id' => $response->id,
             ]);
