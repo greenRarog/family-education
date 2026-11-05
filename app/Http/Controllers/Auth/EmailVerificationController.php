@@ -20,6 +20,7 @@ class EmailVerificationController extends Controller
         $user = $request->user();
         // Compare-and-set also makes concurrent valid clicks emit one event.
         $changed = User::query()->whereKey($user->id)
+            ->whereNull('account_deleted_at')
             ->where('email', $user->email)
             ->whereNull('email_verified_at')
             ->update(['email_verified_at' => now()]);

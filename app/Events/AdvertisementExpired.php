@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Events;
 
 use App\Models\Advertisement;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class AdvertisementExpired
+class AdvertisementExpired implements ShouldDispatchAfterCommit
 {
     use Dispatchable;
     use SerializesModels;

@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libzip-dev \
     && docker-php-ext-install \
+        pcntl \
         pdo_pgsql \
         pgsql \
         zip \

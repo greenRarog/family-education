@@ -31,6 +31,18 @@ return [
     */
 
     'connections' => [
+        'deletion_registry' => [
+            'driver' => 'pgsql',
+            'host' => env('DELETION_REGISTRY_HOST'),
+            'port' => env('DELETION_REGISTRY_PORT', '5432'),
+            'database' => env('DELETION_REGISTRY_DATABASE'),
+            'username' => env('DELETION_REGISTRY_USERNAME'),
+            'password' => env('DELETION_REGISTRY_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'search_path' => 'public',
+            'sslmode' => env('DELETION_REGISTRY_SSLMODE', 'require'),
+        ],
 
         'sqlite' => [
             'driver' => 'sqlite',

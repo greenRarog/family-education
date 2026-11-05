@@ -323,6 +323,8 @@ class AdminActionLogTest extends TestCase
         $actor = User::factory()->create(['user_type' => UserType::ADMIN]);
         $report = Report::factory()->create();
         $this->recordExpiry($actor, $report->target);
+        $lifecycleMigration = require database_path('migrations/2026_11_02_120000_add_account_lifecycle.php');
+        $lifecycleMigration->down();
         $resolutionMigration = require database_path('migrations/2026_10_31_120000_create_report_resolution_actions_table.php');
         $resolutionMigration->down();
         $hideMigration = require database_path('migrations/2026_10_30_150000_add_advertisement_hide_action.php');
@@ -337,6 +339,7 @@ class AdminActionLogTest extends TestCase
         $blockMigration->up();
         $hideMigration->up();
         $resolutionMigration->up();
+        $lifecycleMigration->up();
         $entry = $this->recordExpiry($actor, $report->target);
         $this->expectException(QueryException::class);
         DB::table('admin_actions')->where('id', $entry->id)->delete();

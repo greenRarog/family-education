@@ -128,7 +128,7 @@ class TeacherController extends Controller
 
         $advertisements = $user->advertisements()
             ->where('type', AdvertisementType::TEACHER_TO_SERVICE)
-            ->where('status', AdvertisementStatus::PUBLISHED)
+            ->where('status', AdvertisementStatus::PUBLISHED)->unexpired()
             ->whereNull('hide_action_id')
             ->with(['city', 'subjects'])
             ->latest('published_at')

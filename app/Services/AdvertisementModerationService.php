@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\AdminActionType;
-use App\Enums\AdvertisementStatus;
 use App\Enums\ReportReason;
 use App\Enums\UserType;
 use App\Exceptions\EmailVerificationRequired;
@@ -32,6 +31,7 @@ class AdvertisementModerationService
             // Same owner -> advertisement order as business writes and unblock.
             User::on($target->getConnectionName())->whereKey($target->user_id)->lockForUpdate()->firstOrFail();
             $current = Advertisement::on($target->getConnectionName())->whereKey($target->id)->lockForUpdate()->firstOrFail();
+            abort_if($current->isAccountDeleted(), 409, 'Объявление удалено вместе с аккаунтом.');
             $data = Validator::make([
                 'reason_code' => $input['reason_code'] ?? ($hidden ? null : 'restriction_removed'),
                 'reason' => is_string($input['reason'] ?? null) ? trim($input['reason']) : ($input['reason'] ?? null),
@@ -49,11 +49,9 @@ class AdvertisementModerationService
                 return ['advertisement' => $current, 'changed' => false, 'action_id' => null];
             }
             $original = $current->hidingAction;
-            if (! $hidden && $current->status === AdvertisementStatus::PUBLISHED
-                && $current->published_at !== null && $current->published_at->lte(now()->subYear())) {
-                $current->forceFill(['status' => AdvertisementStatus::CLOSED, 'closed_at' => $current->closed_at ?? now()])->save();
-                $this->logger->record($actor, $current, AdminActionType::ADVERTISEMENT_EXPIRED, 'expired',
-                    'Срок публикации истёк к моменту восстановления объявления.', ['status' => 'published'], ['status' => 'closed']);
+            if (! $hidden) {
+                app(AdvertisementClosureService::class)->close($current, actor: $actor,
+                    reason: 'Срок публикации истёк к моменту восстановления объявления.');
             }
             $entry = $this->logger->record($actor, $current,
                 $hidden ? AdminActionType::ADVERTISEMENT_HIDDEN : AdminActionType::ADVERTISEMENT_RESTORED,
@@ -81,6 +79,7 @@ class AdvertisementModerationService
             $actor = $this->actor($actor, $target);
             User::on($target->getConnectionName())->whereKey($target->user_id)->lockForUpdate()->firstOrFail();
             $current = Advertisement::on($target->getConnectionName())->whereKey($target->id)->lockForUpdate()->firstOrFail();
+            abort_if($current->isAccountDeleted(), 409, 'Объявление удалено вместе с аккаунтом.');
             abort_unless($current->hide_action_id === (int) $data['decision_id'], 409, 'Решение изменилось. Обновите карточку.');
             $previous = AdminAction::on($target->getConnectionName())->where('related_action_id', $current->hide_action_id)
                 ->where('action', AdminActionType::APPEAL_REJECTED)->where('reason', $data['reason'])->where('actor_id', $actor->id)->first();

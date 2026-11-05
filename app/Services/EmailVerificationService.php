@@ -22,6 +22,10 @@ class EmailVerificationService
     /** @return array{status: string, retry_after: int} */
     public function send(User $user): array
     {
+        $user = $user->fresh();
+        if ($user === null || $user->isAccountDeleted()) {
+            return ['status' => 'failed', 'retry_after' => 0];
+        }
         if ($user->hasVerifiedEmail()) {
             return ['status' => 'already_verified', 'retry_after' => 0];
         }

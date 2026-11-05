@@ -32,7 +32,7 @@ class AdvertisementResponseController extends Controller
         if (! $user->hasVerifiedEmail()) {
             throw new EmailVerificationRequired;
         }
-        if ($advertisement->status !== AdvertisementStatus::PUBLISHED) {
+        if ($advertisement->status !== AdvertisementStatus::PUBLISHED || $advertisement->publicationExpired()) {
             abort(422, 'Нельзя откликнуться на это объявление.');
         }
         if (

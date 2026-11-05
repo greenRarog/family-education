@@ -65,6 +65,7 @@ class UserBlockService
                 throw new EmailVerificationRequired;
             }
             $current = User::on($target->getConnectionName())->whereKey($target->id)->lockForUpdate()->firstOrFail();
+            abort_if($current->isAccountDeleted(), 409, 'Аккаунт удалён.');
             abort_unless($current->block_action_id === (int) $data['decision_id'], 409, 'Решение изменилось. Обновите карточку.');
             $previous = AdminAction::on($target->getConnectionName())->where('related_action_id', $current->block_action_id)
                 ->where('action', AdminActionType::APPEAL_REJECTED)->where('reason', $reason)->where('actor_id', $actor->id)->first();
@@ -99,6 +100,7 @@ class UserBlockService
                 throw new EmailVerificationRequired;
             }
             $current = User::on($connection->getName())->whereKey($target->id)->lockForUpdate()->firstOrFail();
+            abort_if($current->isAccountDeleted(), 409, 'Аккаунт удалён.');
             if ($current->id === $currentActor->id || $current->user_type === UserType::ADMIN) {
                 throw ValidationException::withMessages(['user' => 'Нельзя применять блокировку к себе или администратору.']);
             }
@@ -158,23 +160,11 @@ class UserBlockService
     private function closeExpiredAdvertisements(User $actor, User $owner, Carbon $now): int
     {
         $count = 0;
-        Advertisement::on($owner->getConnectionName())
-            ->where('user_id', $owner->id)
-            ->where('status', AdvertisementStatus::PUBLISHED)
-            ->whereNotNull('published_at')
-            ->where('published_at', '<=', $now->copy()->subYear())
-            ->lockForUpdate()
-            ->chunkById(100, function ($advertisements) use ($actor, $now, &$count): void {
-                foreach ($advertisements as $advertisement) {
-                    $advertisement->forceFill([
-                        'status' => AdvertisementStatus::CLOSED,
-                        'closed_at' => $advertisement->closed_at ?? $now,
-                    ])->save();
-                    $this->logger->record(
-                        $actor, $advertisement, AdminActionType::ADVERTISEMENT_EXPIRED,
-                        'expired', 'Срок публикации истёк к моменту разблокировки владельца.',
-                        ['status' => 'published'], ['status' => 'closed'],
-                    );
+        Advertisement::on($owner->getConnectionName())->where('user_id', $owner->id)
+            ->where('status', AdvertisementStatus::PUBLISHED)->expired($now)
+            ->eachById(function (Advertisement $advertisement) use ($actor, $now, &$count): void {
+                if (app(AdvertisementClosureService::class)->close($advertisement, actor: $actor,
+                    reason: 'Срок публикации истёк к моменту разблокировки владельца.', at: $now)) {
                     $count++;
                 }
             });

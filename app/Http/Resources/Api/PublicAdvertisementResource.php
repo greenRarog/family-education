@@ -14,6 +14,10 @@ class PublicAdvertisementResource extends JsonResource
     {
         /** @var Advertisement $advertisement */
         $advertisement = $this->resource;
+        if ($advertisement->isAccountDeleted()) {
+            return ['id' => $advertisement->id, 'type' => $advertisement->type->value, 'status' => $advertisement->status->value,
+                'account_deleted' => true, 'unavailable' => true];
+        }
         $teacher = $advertisement->getAttribute('public_teacher');
 
         // Public responses deliberately exclude children, owner IDs and pivot data.

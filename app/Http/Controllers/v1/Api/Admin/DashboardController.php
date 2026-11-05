@@ -16,8 +16,8 @@ class DashboardController extends Controller
     public function __invoke(): JsonResponse
     {
         return response()->json([
-            'blocked_users' => User::query()->whereNotNull('block_action_id')->count(),
-            'hidden_advertisements' => Advertisement::query()->whereNotNull('hide_action_id')->count(),
+            'blocked_users' => User::query()->whereNull('account_deleted_at')->whereNotNull('block_action_id')->count(),
+            'hidden_advertisements' => Advertisement::query()->whereNull('account_deleted_at')->whereNotNull('hide_action_id')->count(),
             'open_reports' => Report::query()->where('status', ReportStatus::OPEN)->count(),
         ]);
     }

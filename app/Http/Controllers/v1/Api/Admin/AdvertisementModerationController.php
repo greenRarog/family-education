@@ -10,6 +10,7 @@ use App\Http\Resources\Api\PublicAdvertisementResource;
 use App\Models\AdminAction;
 use App\Models\Advertisement;
 use App\Services\AdvertisementModerationService;
+use App\Services\ModerationRetentionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -25,9 +26,9 @@ class AdvertisementModerationController extends Controller
         ]);
         $query = Advertisement::query()->with(['city', 'district', 'metroStation', 'subjects', 'hidingAction'])->orderByDesc('id');
         if (($data['state'] ?? 'all') === 'hidden') {
-            $query->whereNotNull('hide_action_id');
+            $query->whereNull('account_deleted_at')->whereNotNull('hide_action_id');
         } elseif (($data['state'] ?? 'all') === 'visible') {
-            $query->whereNull('hide_action_id');
+            $query->whereNull('account_deleted_at')->whereNull('hide_action_id');
         }
         if (($data['status'] ?? 'all') !== 'all') {
             $query->where('status', $data['status']);
@@ -45,7 +46,8 @@ class AdvertisementModerationController extends Controller
     {
         $request->validate(['page' => ['sometimes', 'integer', 'min:1']]);
 
-        return response()->json(AdminAction::query()->where('target_type', 'advertisement')->where('target_id', $advertisement->id)->orderByDesc('id')->paginate(20));
+        return response()->json(AdminAction::query()->whereNotIn('id', app(ModerationRetentionService::class)->expiredIds()['actions'])
+            ->where('target_type', 'advertisement')->where('target_id', $advertisement->id)->orderByDesc('id')->paginate(20));
     }
 
     public function rejectAppeal(Request $request, Advertisement $advertisement, AdvertisementModerationService $service): JsonResponse

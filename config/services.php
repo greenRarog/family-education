@@ -50,7 +50,18 @@ return [
         ),
     ],
 
+    'max' => [
+        'enabled' => (bool) env('MAX_ENABLED', false),
+        'bot_id' => env('MAX_BOT_ID'),
+        'username' => env('MAX_BOT_USERNAME'),
+        'token' => env('MAX_BOT_TOKEN'),
+        'webhook_secret' => env('MAX_WEBHOOK_SECRET'),
+        'ca_bundle' => env('MAX_CA_BUNDLE'),
+    ],
+
     'telegram' => [
+        'enabled' => (bool) env('TELEGRAM_ENABLED', false),
+        'username' => env('TELEGRAM_BOT_USERNAME'),
         'token' => env('TELEGRAM_BOT_TOKEN'),
         'proxy' => env('TELEGRAM_PROXY_URL'),
     ],

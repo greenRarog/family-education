@@ -22,7 +22,7 @@ use Tests\TestCase;
 
 class EmailVerificationDeliveryTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Support\ConfirmedTelegram;
 
     public static function notifications(): array
     {
@@ -45,7 +45,7 @@ class EmailVerificationDeliveryTest extends TestCase
     public function test_unverified_user_does_not_queue_mail_and_telegram_policy_is_preserved(string $type): void
     {
         [$user, $notification] = $this->notification($type);
-        $user->forceFill(['email_verified_at' => null, 'telegram_chat_id' => 'test-chat'])->save();
+        $user->forceFill(['email_verified_at' => null])->save();
         $user->notificationSetting()->create(['email_enabled' => true, 'telegram_enabled' => true]);
         $this->assertSame(['telegram'], $notification->via($user));
         $this->assertTrue($notification->shouldSend($user, 'telegram'));
@@ -96,6 +96,7 @@ class EmailVerificationDeliveryTest extends TestCase
     {
         $conversation = Conversation::factory()->create();
         $response = $conversation->advertisementResponse;
+        $this->confirmTelegramFixture($response->advertisement->user);
         $notification = match ($type) {
             'response' => new NewResponseNotification($response),
             'expired' => new AdvertisementExpiredNotification($response->advertisement),

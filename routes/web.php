@@ -2,26 +2,32 @@
 
 declare(strict_types=1);
 
+use App\Contracts\AccountDeletionRegistry;
+use App\Enums\UserType;
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Middleware\SerializeAccountAccess;
 use App\Http\Middleware\ThrottleAdvertisementRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/api/user', function () {
-    if (! Auth::check()) {
+    $user = Auth::user()?->fresh();
+    if ($user === null || $user->isAccountDeleted()) {
         return response()->json([
             'appeal_email' => config('moderation.appeal_email'),
             'authenticated' => false,
+            'account_deletion_available' => false,
             'user' => null,
         ]);
     }
 
-    $user = Auth::user()->fresh();
     $action = $user->blockingAction;
 
     return response()->json([
         'appeal_email' => config('moderation.appeal_email'),
         'authenticated' => true,
+        'account_deletion_available' => $user->user_type !== UserType::ADMIN
+            && config('account_deletion.enabled') && app(AccountDeletionRegistry::class)->available(),
         'user' => [
             'id' => $user->id,
             'is_blocked' => $user->isBlocked(),
@@ -40,7 +46,7 @@ Route::get('/api/user', function () {
 });
 
 // Application-owned verification routes; Fortify continues to own login/registration.
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', SerializeAccountAccess::class])->group(function () {
     Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
         ->middleware(['signed:relative', ThrottleAdvertisementRequests::using('email-verification-check')])
         ->name('verification.verify');

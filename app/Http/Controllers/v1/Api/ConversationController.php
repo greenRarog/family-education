@@ -17,7 +17,7 @@ class ConversationController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $conversations = Conversation::query()
+        $conversations = Conversation::query()->retained()
             ->with([
                 'advertisementResponse.user',
                 'advertisementResponse.advertisement.user',
@@ -26,11 +26,13 @@ class ConversationController extends Controller
             ])->withExists([
                 'messages as has_unread_messages' => function ($query) use ($user) {
                     $query
+                        ->whereNull('conversations.account_deleted_at')
                         ->where('user_id', '!=', $user->id)
                         ->whereNull('read_at');
                 },
             ])->withCount([
                 'messages as unread_messages_count' => fn ($query) => $query
+                    ->whereNull('conversations.account_deleted_at')
                     ->where('user_id', '!=', $user->id)
                     ->whereNull('read_at'),
             ])
@@ -58,6 +60,7 @@ class ConversationController extends Controller
     public function show(Request $request, Conversation $conversation): JsonResponse
     {
         abort_unless($conversation->hasParticipant($request->user()), 403);
+        abort_if($conversation->isExpired(), 404);
         $data = $request->validate(['after_id' => ['nullable', 'integer', 'min:0']]);
         $conversation->load([
             'advertisementResponse.user',
@@ -95,6 +98,7 @@ class ConversationController extends Controller
     public function messages(Request $request, Conversation $conversation): JsonResponse
     {
         abort_unless($conversation->hasParticipant($request->user()), 403);
+        abort_if($conversation->isExpired(), 404);
         $data = $request->validate([
             'before_id' => ['nullable', 'integer', 'min:1', 'prohibits:after_id'],
             'after_id' => ['nullable', 'integer', 'min:0', 'prohibits:before_id'],
@@ -131,6 +135,7 @@ class ConversationController extends Controller
             ->whereNull('read_at')
             ->where('user_id', '!=', $user->id)
             ->whereHas('conversation', function ($query) use ($user) {
+                $query->whereNull('account_deleted_at');
                 $query->where(function ($query) use ($user) {
                     $query->whereHas(
                         'advertisementResponse',

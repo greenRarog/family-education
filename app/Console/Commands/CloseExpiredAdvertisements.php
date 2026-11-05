@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Enums\AdvertisementStatus;
-use App\Events\AdvertisementExpired;
 use App\Models\Advertisement;
+use App\Services\AdvertisementClosureService;
 use Illuminate\Console\Command;
 
 class CloseExpiredAdvertisements extends Command
@@ -15,26 +15,17 @@ class CloseExpiredAdvertisements extends Command
 
     protected $description = 'Close published advertisements older than one year';
 
-    public function handle(): int
+    public function handle(AdvertisementClosureService $closure): int
     {
-        $expiredBefore = now()->subYear();
-
+        $at = now();
         $count = 0;
-
-        Advertisement::query()
-            ->where('status', AdvertisementStatus::PUBLISHED)
-            ->whereNotNull('published_at')
-            ->where('published_at', '<=', $expiredBefore)
-            ->eachById(function (Advertisement $advertisement) use (&$count) {
-                $advertisement->update([
-                    'status' => AdvertisementStatus::CLOSED,
-                ]);
-
-                AdvertisementExpired::dispatch($advertisement);
-
-                $count++;
+        Advertisement::query()->where('status', AdvertisementStatus::PUBLISHED)
+            ->whereNull('account_deleted_at')->expired($at)
+            ->eachById(function (Advertisement $advertisement) use ($closure, $at, &$count): void {
+                if ($closure->close($advertisement, at: $at)) {
+                    $count++;
+                }
             });
-
         $this->info("Closed {$count} expired advertisement(s).");
 
         return self::SUCCESS;

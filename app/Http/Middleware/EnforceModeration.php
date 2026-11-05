@@ -50,6 +50,7 @@ class EnforceModeration
             $users = User::query()->whereIn('id', array_unique($ids))->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             $actor = $users->get($actorId);
             abort_if($actor === null, 401);
+            abort_if($actor->isAccountDeleted(), 401);
             if ($actor->isBlocked()) {
                 return response()->json(['code' => 'user_blocked', 'message' => 'Аккаунт заблокирован. Действие недоступно.'], 403);
             }
@@ -60,13 +61,17 @@ class EnforceModeration
                     $model->refresh();
                 }
             }
+            if ($authorized && $response instanceof AdvertisementResponse) {
+                abort_if($users->get($response->user_id)?->isAccountDeleted()
+                    || $users->get($response->advertisement->user_id)?->isAccountDeleted(), 403, 'Аккаунт собеседника удалён.');
+            }
             if ($authorized && $response instanceof AdvertisementResponse && ! $request->is('*/reject')) {
                 if ($users->get($response->user_id)?->isBlocked() || $users->get($response->advertisement->user_id)?->isBlocked()) {
                     return response()->json(['code' => 'conversation_paused', 'message' => 'Общение приостановлено.'], 403);
                 }
             }
             if ($advertisement instanceof Advertisement && $request->is('*/responses')) {
-                abort_if($advertisement->isHidden() || $users->get($advertisement->user_id)?->isBlocked(), 404);
+                abort_if($advertisement->isAccountDeleted() || $advertisement->isHidden() || $users->get($advertisement->user_id)?->isBlocked(), 404);
             }
             if ($profile instanceof TeacherProfile && $request->is('*/approve') && $users->get($profile->user_id)?->isBlocked()) {
                 return response()->json(['code' => 'profile_owner_blocked', 'message' => 'Владелец профиля заблокирован.'], 403);

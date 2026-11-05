@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\DemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use LogicException;
 use Tests\TestCase;
 
 class DatabaseSeederTest extends TestCase
@@ -23,9 +24,35 @@ class DatabaseSeederTest extends TestCase
         Artisan::call('db:seed', ['--force' => true]);
 
         $this->assertSame($firstRunCounts, $this->seededRecordCounts());
-        $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
-        $this->assertTrue(Hash::check('Admin123!', $admin->password));
-        $this->assertSame('ru', $admin->locale);
+        $this->assertSame(0, User::query()->count());
+        $this->assertDatabaseCount('families', 0);
+        $this->assertDatabaseCount('children', 0);
+        $this->assertDatabaseCount('advertisements', 0);
+        $this->assertGreaterThan(0, DB::table('cities')->count());
+        $this->assertGreaterThan(0, DB::table('subjects')->count());
+    }
+
+    public function test_demo_data_is_explicit_and_repeatable(): void
+    {
+        $this->seed(DemoSeeder::class);
+        $counts = $this->seededRecordCounts();
+        $this->seed(DemoSeeder::class);
+        $this->assertSame($counts, $this->seededRecordCounts());
+        $this->assertSame(3, User::query()->count());
+        $this->assertGreaterThan(0, DB::table('advertisements')->count());
+        $this->assertDatabaseMissing('users', ['user_type' => 'admin']);
+    }
+
+    public function test_demo_seeder_refuses_production_before_writing(): void
+    {
+        $this->app->instance('env', 'production');
+        try {
+            $this->seed(DemoSeeder::class);
+            $this->fail('Production demo seed should fail.');
+        } catch (LogicException) {
+            $this->assertDatabaseCount('users', 0);
+            $this->assertDatabaseCount('cities', 0);
+        }
     }
 
     /** @return array<string, int> */

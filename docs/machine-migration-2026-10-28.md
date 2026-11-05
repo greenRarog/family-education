@@ -1,55 +1,58 @@
 # Перенос и продолжение разработки
 
-Актуально: 29 октября 2026. Этап A закрыт по решению пользователя с исключением
-неподтверждённого Actions checkout A06.1. [Итоги A](stages-0-1-acceptance-2026-10-29.md),
-[план B–F](refactoring-plan-2026-10-26.md). Текущий следующий пункт и статус — в плане.
+Актуально: 5 ноября 2026. [Статус и план](refactoring-plan-2026-10-26.md).
+Три самостоятельных репозитория — backend, frontend, infrastructure, ветка main.
 
 ## Что переносить
 
-Три самостоятельных репозитория — `backend`, `frontend`, `infrastructure`,
-все на ветке main. Последние локальные коммиты:
-
-| Репозиторий | HEAD |
-| --- | --- |
-| backend | `8eefc29805c3c54caff8ff07874f831cceb8af4e` |
-| frontend | `abaad10b289acb96aeea9128c386891b6b5a9944` |
-| infrastructure | `52cc5d7fb50e273bb77cf15063678b7ee0fbd982` |
-
-Поверх них есть незакоммиченные E2E-инструменты, тесты и документация:
-перенос только коммитов их потеряет. Сохранить текущие рабочие деревья вместе
-с `.git` либо отдельно перенести tracked diff и untracked-файлы. Не заменять
-их старыми bundle. Публикация HEAD на GitHub не подтверждена: прежний push
-не прошёл из-за DNS; перед remote-клонированием проверить доступность нужных SHA.
-
-`migration-2026-10-28/` содержит bundle только указанных HEAD. Для восстановления
-этого снимка после проверки `sha256sum -c SHA256SUMS` в каталоге архива:
+Сначала получить фактические HEAD и состояние каждого рабочего дерева:
 
 ```bash
-mkdir family-education
-cd family-education
-git clone --branch main ../migration-2026-10-28/backend.bundle backend
-git clone --branch main ../migration-2026-10-28/frontend.bundle frontend
-git clone --branch main ../migration-2026-10-28/infrastructure.bundle infrastructure
+git -C backend rev-parse HEAD
+git -C backend status --short
+git -C frontend rev-parse HEAD
+git -C frontend status --short
+git -C infrastructure rev-parse HEAD
+git -C infrastructure status --short
 ```
 
-Затем перенести последующие рабочие изменения. Исходные origin:
-`git@github.com:greenRarog/family-education.git`,
-`git@github.com:greenRarog/family-education-frontend.git`,
-`git@github.com:greenRarog/family-education-infrastructure.git`.
+Локальный этап сохранён в ветках `main` всех трёх репозиториев. На новой машине
+клонировать их рядом, сохранив имена каталогов:
 
-## Окружение и следующий шаг
+```bash
+mkdir -p family-education
+cd family-education
+git clone --branch main https://github.com/greenRarog/family-education.git backend
+git clone --branch main https://github.com/greenRarog/family-education-frontend.git frontend
+git clone --branch main https://github.com/greenRarog/family-education-infrastructure.git infrastructure
+```
+
+Если репозитории уже есть, сначала проверить их status, затем обновить каждый
+через `git pull --ff-only`. Новые незакоммиченные изменения, появившиеся после
+этого сохранения, Git сам не переносит: их отдельно сохранить до смены машины.
+
+Все необходимые решения, результаты и оставшиеся задачи находятся в
+[плане](refactoring-plan-2026-10-26.md). Корневой `SESSION_CONTEXT.md` и
+локальные `.local-stage-test`/исторические архивы не нужны для продолжения;
+при желании их можно перенести отдельно. Это перенос рабочей машины разработчика,
+а не перенос пользовательских данных на VPS.
+
+## Окружение
 
 Команды зависимостей и запуска — в README [backend](../README.md),
 [frontend](../../frontend/README.md), [infrastructure](../../infrastructure/README.md).
-Для повторения тестового сценария — [E2E](../../infrastructure/environments/e2e/README.md).
-Стенд использует временную БД; start/reset удаляют его данные.
-
 Git не переносит реальные env/секреты, БД/volumes, uploads, vendor/node_modules,
-dist, браузеры и `/tmp`. Зависимости восстанавливать из lock. Нужные рабочие
-данные переносить отдельно с прежним APP_KEY; bundle не является их backup.
-SESSION_CONTEXT.md находится вне репозиториев; он необязателен для переноса.
+dist, браузеры и `/tmp`. Зависимости восстанавливать из lock. По состоянию на
+5 ноября пользовательской БД нет; локальные данные воспроизводятся сидерами.
+Первый запуск VPS использует новую БД и отдельно подготовленные справочники/admin.
+DatabaseSeeder заполняет только справочники; admin:create создаёт администратора
+со скрытым вводом пароля. DemoSeeder для рабочего запуска не применяется.
 
-Новый исполнитель читает backend/AGENTS.md и правила плана, сверяет status/HEAD
-трёх репозиториев и сохраняет рабочие изменения. Следующий ID из плана начать
-после подтверждения; после каждого ID снова спрашивать о следующем. Commit/push,
-GitHub-доступы и VPS автоматически не выполнять.
+Для тестов создавать новый изолированный стенд по соответствующему README.
+Не использовать исторические `/tmp` как готовое окружение. Восстановление
+рабочих данных должно учитывать [политику хранения и restore](account-lifecycle.md#требования-перед-включением-удаления).
+
+Новый исполнитель читает backend/AGENTS.md, план и относящиеся к задаче README,
+сверяет status/HEAD и сохраняет изменения. Выполнять только порученную задачу
+или заранее разрешённую последовательность. Commit/push и VPS автоматически
+не выполнять.

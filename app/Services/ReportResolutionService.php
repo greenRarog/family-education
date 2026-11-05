@@ -24,6 +24,36 @@ class ReportResolutionService
         private readonly AdvertisementModerationService $advertisements,
     ) {}
 
+    /** Internal outcome for a vanished account, not a finding of no violation. */
+    public function closeDeletedTarget(User $actor, Report $report, string $note): Report
+    {
+        return $report->getConnection()->transaction(function () use ($actor, $report, $note): Report {
+            $connection = $report->getConnectionName();
+            $current = Report::on($connection)->whereKey($report->id)->lockForUpdate()->firstOrFail();
+            $admin = User::on($connection)->findOrFail($actor->id);
+            abort_unless($admin->user_type === UserType::ADMIN && ! $admin->isAccountDeleted(), 403);
+            if (! $admin->hasVerifiedEmail()) {
+                throw new EmailVerificationRequired;
+            }
+            abort_unless($current->status === ReportStatus::OPEN, 409);
+            $ad = $current->target_type === 'advertisement' ? Advertisement::on($connection)->find($current->target_id) : null;
+            $userId = $current->target_type === 'user' ? $current->target_id : $ad?->user_id;
+            $target = $userId === null ? null : User::on($connection)->whereKey($userId)->lockForUpdate()->first();
+            abort_unless($target?->isAccountDeleted(), 422, 'Аккаунт цели не удалён.');
+            if (trim($note) === '') {
+                throw ValidationException::withMessages(['resolution_note' => 'Укажите пояснение.']);
+            }
+            $current->forceFill([
+                'status' => ReportStatus::RESOLVED, 'resolution_outcome' => 'account_deleted',
+                'resolved_by' => $admin->id, 'resolution_note' => trim($note), 'resolved_at' => now(),
+            ])->save();
+            $this->logger->record($admin, $current, AdminActionType::REPORT_RESOLVED,
+                'account_deleted', trim($note), ['status' => 'open'], ['status' => 'resolved']);
+
+            return $current->fresh();
+        });
+    }
+
     /** @param array<string, mixed> $input */
     public function resolve(User $actor, Report $report, array $input): Report
     {
@@ -61,7 +91,7 @@ class ReportResolutionService
                 $userId = $current->target_type === 'user' ? $current->target_id : $ad?->user_id;
                 $user = $userId === null ? null : User::query()->whereKey($userId)->lockForUpdate()->first();
                 $ad = $ad === null ? null : Advertisement::query()->whereKey($ad->id)->lockForUpdate()->first();
-                $activeIds = array_filter([$user?->block_action_id, $ad?->hide_action_id]);
+                $activeIds = array_filter([$user?->isAccountDeleted() ? null : $user?->block_action_id, $ad?->isAccountDeleted() ? null : $ad?->hide_action_id]);
                 if (array_diff($existing, $activeIds) !== []) {
                     abort(409, 'Мера изменилась. Обновите карточку.');
                 }

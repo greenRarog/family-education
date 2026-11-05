@@ -19,6 +19,7 @@ use App\Models\AdvertisementResponse;
 use App\Models\District;
 use App\Models\MetroStation;
 use App\Models\User;
+use App\Services\AdvertisementClosureService;
 use App\Services\BannedWordChecker;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -45,8 +46,9 @@ class AdvertisementController extends Controller
         ]);
 
         $query = Advertisement::query()
-            ->where('status', AdvertisementStatus::PUBLISHED)
+            ->where('status', AdvertisementStatus::PUBLISHED)->unexpired()
             ->whereNull('hide_action_id')
+            ->whereNull('account_deleted_at')
             ->whereHas('user', fn ($query) => $query->whereNull('block_action_id'))
             ->with(['subjects', 'city', 'district', 'metroStation']);
 
@@ -154,6 +156,7 @@ class AdvertisementController extends Controller
 
     public function show(Advertisement $advertisement): JsonResponse
     {
+        abort_if($advertisement->isAccountDeleted(), 404);
         $user = auth()->user();
         $isOwner = $user?->id === $advertisement->user_id;
         abort_if(! $isOwner && ($advertisement->isHidden() || $advertisement->user->isBlocked()), 404);
@@ -167,7 +170,7 @@ class AdvertisementController extends Controller
             : null;
         $hasResponded = $response !== null;
         $hasConversation = $response !== null && $response->conversation()->exists();
-        if ($advertisement->status !== AdvertisementStatus::PUBLISHED && ! $isOwner && ! $hasConversation) {
+        if (($advertisement->status !== AdvertisementStatus::PUBLISHED || $advertisement->publicationExpired()) && ! $isOwner && ! $hasConversation) {
             abort(404);
         }
 
@@ -186,6 +189,7 @@ class AdvertisementController extends Controller
                     && ! $isOwner
                     && ! $advertisement->isHidden()
                     && ! $hasResponded
+                    && ! $advertisement->publicationExpired()
                     && $advertisement->status === AdvertisementStatus::PUBLISHED
                     && $advertisement->type->allowsResponsesFrom($user->user_type),
             ],
@@ -286,10 +290,9 @@ class AdvertisementController extends Controller
             ], 422);
         }
 
-        $advertisement->update([
-            'status' => AdvertisementStatus::CLOSED,
-            'closed_at' => now(),
-        ]);
+        if (! app(AdvertisementClosureService::class)->close($advertisement, onlyExpired: false)) {
+            return response()->json(['message' => 'Объявление уже закрыто.'], 422);
+        }
 
         return response()->json([
             'advertisement' => $advertisement->fresh()->load($this->relations())->setAttribute('moderation', $advertisement->moderationDetails()),

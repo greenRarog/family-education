@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\v1\Api\AccountDeletionController;
 use App\Http\Controllers\v1\Api\Admin\AdvertisementModerationController;
 use App\Http\Controllers\v1\Api\Admin\BlockedTermController;
 use App\Http\Controllers\v1\Api\Admin\CityController;
@@ -18,14 +19,21 @@ use App\Http\Controllers\v1\Api\AdvertisementResponseController;
 use App\Http\Controllers\v1\Api\ConversationController;
 use App\Http\Controllers\v1\Api\FamilyController;
 use App\Http\Controllers\v1\Api\LocationController;
+use App\Http\Controllers\v1\Api\MaxLinkController;
+use App\Http\Controllers\v1\Api\MaxWebhookController;
 use App\Http\Controllers\v1\Api\MessageController;
 use App\Http\Controllers\v1\Api\NotificationSettingController;
+use App\Http\Controllers\v1\Api\PasswordController;
 use App\Http\Controllers\v1\Api\ReportController;
 use App\Http\Controllers\v1\Api\TeacherController;
+use App\Http\Controllers\v1\Api\TelegramLinkController;
 use App\Http\Controllers\v1\Api\UserLanguageController;
 use App\Http\Middleware\EnforceModeration;
+use App\Http\Middleware\SerializeAccountAccess;
 use App\Http\Middleware\ThrottleAdvertisementRequests;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/integrations/max/webhook', MaxWebhookController::class);
 
 Route::get('/cities', [LocationController::class, 'cities']);
 Route::get('/cities/{city}/districts', [LocationController::class, 'districts']);
@@ -34,13 +42,24 @@ Route::get('/subjects', [SubjectController::class, 'index']);
 
 Route::middleware('web')->group(function () {
     Route::get('/csrf', static fn () => response()->noContent());
+    Route::post('/account/deletion-status', [AccountDeletionController::class, 'status']);
     Route::get('/advertisements/feed', [AdvertisementController::class, 'feed']);
     Route::get('/advertisements/{advertisement}', [AdvertisementController::class, 'show']);
     Route::get('/teachers/{user}', [TeacherController::class, 'publicProfile']);
 });
 Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('/max-link', MaxLinkController::class)->name('max.status');
+    Route::post('/max-link/attempts', MaxLinkController::class)->name('max.create');
+    Route::post('/max-link/confirm', MaxLinkController::class)->name('max.confirm');
+    Route::delete('/max-link', MaxLinkController::class)->name('max.unlink');
+    Route::get('/telegram-link', TelegramLinkController::class)->name('telegram.status');
+    Route::post('/telegram-link/attempts', TelegramLinkController::class)->name('telegram.create');
+    Route::post('/telegram-link/confirm', TelegramLinkController::class)->name('telegram.confirm');
+    Route::delete('/telegram-link', TelegramLinkController::class)->name('telegram.unlink');
+    Route::put('/account/password', [PasswordController::class, 'update'])->middleware(ThrottleAdvertisementRequests::using('password-change'));
+    Route::delete('/account', [AccountDeletionController::class, 'destroy'])->middleware(ThrottleAdvertisementRequests::using('account-deletion'));
     Route::post('/reports', [ReportController::class, 'store'])->middleware(ThrottleAdvertisementRequests::using('reports-create'));
-    Route::put('/user/language', [UserLanguageController::class, 'update']);
+    Route::put('/user/language', [UserLanguageController::class, 'update'])->middleware(SerializeAccountAccess::class);
     Route::get('/advertisements', [AdvertisementController::class, 'index']);
     Route::get('/advertisements/{advertisement}/edit', [AdvertisementController::class, 'edit']);
     Route::post('/advertisements', [AdvertisementController::class, 'store'])
@@ -60,7 +79,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/conversations/{conversation}/messages', [ConversationController::class, 'messages']);
     Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store'])
         ->middleware(ThrottleAdvertisementRequests::using('messages-create'))->middleware(EnforceModeration::class);
-    Route::post('/conversations/{conversation}/read', [MessageController::class, 'read']);
+    Route::post('/conversations/{conversation}/read', [MessageController::class, 'read'])->middleware(SerializeAccountAccess::class);
 
     Route::get('/family', [FamilyController::class, 'show']);
     Route::put('/family', [FamilyController::class, 'update'])->middleware(EnforceModeration::class);
@@ -69,8 +88,8 @@ Route::middleware(['web', 'auth'])->group(function () {
 
     Route::get('/locations', [LocationController::class, 'index']);
 
-    Route::get('/notification-settings', [NotificationSettingController::class, 'show']);
-    Route::put('/notification-settings', [NotificationSettingController::class, 'update']);
+    Route::get('/notification-settings', [NotificationSettingController::class, 'show'])->middleware(SerializeAccountAccess::class);
+    Route::put('/notification-settings', [NotificationSettingController::class, 'update'])->middleware(SerializeAccountAccess::class);
 });
 
 Route::middleware(['auth', 'admin', 'web'])

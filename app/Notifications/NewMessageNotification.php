@@ -20,6 +20,8 @@ class NewMessageNotification extends Notification implements ShouldQueue
         public readonly Message $message,
     ) {
         $this->captureModerationState();
+        $this->captureTelegramBindings();
+        $this->captureMaxBindings();
     }
 
     public function via(object $notifiable): array
@@ -38,6 +40,10 @@ class NewMessageNotification extends Notification implements ShouldQueue
         }
         if ($notifiable->telegramNotificationsEnabled()) {
             $channels[] = 'telegram';
+        }
+
+        if ($notifiable->maxNotificationsEnabled()) {
+            $channels[] = ConfirmedMaxChannel::class;
         }
 
         return $channels;

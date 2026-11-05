@@ -11,4 +11,11 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('advertisements:close-expired')
-    ->daily();
+    ->hourly()->withoutOverlapping();
+
+Schedule::command('accounts:purge-expired')->hourly()->withoutOverlapping();
+Schedule::command('accounts:confirm-deletions')->hourly()->withoutOverlapping();
+
+Schedule::command('telegram:prune')->hourly()->withoutOverlapping();
+
+Schedule::command('max:prune')->hourly()->withoutOverlapping();

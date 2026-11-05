@@ -24,7 +24,7 @@ use Tests\TestCase;
 
 class HiddenAdvertisementDeliveryTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Support\ConfirmedTelegram;
 
     public static function cases(): array
     {
@@ -38,7 +38,7 @@ class HiddenAdvertisementDeliveryTest extends TestCase
         $response = $conversation->advertisementResponse;
         $ad = $response->advertisement;
         $owner = $ad->user;
-        $owner->update(['telegram_chat_id' => 'test-chat']);
+        $this->confirmTelegramFixture($owner);
         $owner->notificationSetting()->create(['email_enabled' => true, 'telegram_enabled' => true]);
         $notification = $type === 'response' ? new NewResponseNotification($response)
             : new NewMessageNotification(Message::factory()->create(['conversation_id' => $conversation->id, 'user_id' => $response->user_id]));

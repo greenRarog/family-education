@@ -26,6 +26,8 @@ class NewResponseNotification extends Notification implements ShouldQueue
         ?int $hideVersion = null,
     ) {
         $this->captureModerationState();
+        $this->captureTelegramBindings();
+        $this->captureMaxBindings();
         $this->hideVersion = $hideVersion ?? $this->hideCount();
     }
 
@@ -67,6 +69,10 @@ class NewResponseNotification extends Notification implements ShouldQueue
 
         if ($notifiable->telegramNotificationsEnabled()) {
             $channels[] = 'telegram';
+        }
+
+        if ($notifiable->maxNotificationsEnabled()) {
+            $channels[] = ConfirmedMaxChannel::class;
         }
 
         return $channels;

@@ -6,9 +6,12 @@ namespace App\Models;
 
 use App\Enums\UserType;
 use App\Services\EmailVerificationService;
+use App\Services\Max\BotConfiguration as MaxConfiguration;
+use App\Services\Telegram\BotConfiguration;
 use Database\Factories\UserFactory;
 use Eloquent;
 use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -34,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property string $email
  * @property string|null $telegram_chat_id
  * @property Carbon|null $email_verified_at
+ * @property int $session_version
  * @property string $password
  * @property string|null $remember_token
  * @property Carbon|null $created_at
@@ -41,6 +45,7 @@ use Illuminate\Support\Carbon;
  * @property UserType $user_type
  * @property string|null $locale
  * @property int|null $block_action_id
+ * @property Carbon|null $account_deleted_at
  * @property-read AdminAction|null $blockingAction
  * @property-read Collection<int, AdvertisementResponse> $advertisementResponses
  * @property-read int|null $advertisement_responses_count
@@ -71,8 +76,8 @@ use Illuminate\Support\Carbon;
  *
  * @mixin Eloquent
  */
-#[Fillable(['name', 'email', 'password', 'user_type', 'telegram_chat_id', 'locale'])]
-#[Hidden(['password', 'remember_token', 'block_action_id', 'blockingAction'])]
+#[Fillable(['name', 'email', 'password', 'user_type', 'locale'])]
+#[Hidden(['password', 'remember_token', 'block_action_id', 'blockingAction', 'purged_block_count', 'session_version', 'telegram_chat_id', 'telegram_confirmed_at', 'telegram_bot_id', 'telegram_binding_version', 'max_user_id', 'max_confirmed_at', 'max_bot_id', 'max_binding_version'])]
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmailContract
 {
     /** @use HasFactory<UserFactory> */
@@ -94,6 +99,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'password' => 'hashed',
             'user_type' => UserType::class,
             'block_action_id' => 'integer',
+            'account_deleted_at' => 'datetime',
+            'session_version' => 'integer',
+            'telegram_binding_version' => 'integer',
+            'telegram_confirmed_at' => 'datetime',
+            'max_confirmed_at' => 'datetime',
+            'max_binding_version' => 'integer',
         ];
     }
 
@@ -104,7 +115,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function isBlocked(): bool
     {
-        return $this->block_action_id !== null;
+        return ! $this->isAccountDeleted() && $this->block_action_id !== null;
+    }
+
+    public function isAccountDeleted(): bool
+    {
+        return $this->account_deleted_at !== null;
     }
 
     /** @return BelongsTo<AdminAction, $this> */
@@ -165,19 +181,47 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         app(EmailVerificationService::class)->send($this);
     }
 
+    public function sendPasswordResetNotification($token): void
+    {
+        $current = $this->fresh();
+        if ($current !== null && ! $current->isAccountDeleted()) {
+            $current->notify(new ResetPassword($token));
+        }
+    }
+
     public function emailNotificationsEnabled(): bool
     {
         $setting = $this->notificationSetting;
 
-        return $this->hasVerifiedEmail() && ($setting === null || $setting->email_enabled);
+        return ! $this->isAccountDeleted() && $this->hasVerifiedEmail() && ($setting === null || $setting->email_enabled);
+    }
+
+    public function hasConfirmedTelegram(): bool
+    {
+        return ! $this->isAccountDeleted() && BotConfiguration::available()
+            && $this->telegram_chat_id !== null && $this->telegram_confirmed_at !== null
+            && $this->telegram_bot_id === BotConfiguration::id();
     }
 
     public function telegramNotificationsEnabled(): bool
     {
         $setting = $this->notificationSetting;
 
-        return $setting !== null
+        return $this->hasConfirmedTelegram() && $setting !== null
             && $setting->telegram_enabled
             && $this->telegram_chat_id !== null;
+    }
+
+    public function hasConfirmedMax(): bool
+    {
+        return ! $this->isAccountDeleted() && MaxConfiguration::available()
+            && $this->max_user_id !== null && $this->max_confirmed_at !== null
+            && $this->max_bot_id === MaxConfiguration::id();
+    }
+
+    public function maxNotificationsEnabled(): bool
+    {
+        return $this->hasConfirmedMax() && $this->notificationSetting !== null
+            && $this->notificationSetting->max_enabled;
     }
 }

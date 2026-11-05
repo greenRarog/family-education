@@ -48,6 +48,7 @@ class ReportController extends Controller
         $targetUser = null;
         if ($data['context_type'] === 'conversation') {
             $conversation = Conversation::query()->findOrFail($data['context_id']);
+            abort_if($conversation->isExpired(), 404);
             abort_unless($conversation->hasParticipant($actor), 404);
             $response = $conversation->advertisementResponse;
             $advertisement = $response->advertisement;
@@ -66,6 +67,10 @@ class ReportController extends Controller
             $users = User::query()->whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             $actor = $users->get($actor->id);
             abort_if($actor === null, 401);
+            abort_if($actor->isAccountDeleted(), 401);
+            if ($conversation !== null) {
+                abort_if($conversation->fresh()?->isExpired() ?? true, 404);
+            }
             if ($actor->isBlocked()) {
                 return response()->json(['code' => 'user_blocked'], 403);
             }
@@ -77,10 +82,11 @@ class ReportController extends Controller
             if ($data['target_type'] === 'advertisement') {
                 abort_if($advertisement === null, 404);
                 $advertisement = Advertisement::query()->whereKey($advertisement->id)->lockForUpdate()->firstOrFail();
+                abort_if($advertisement->isAccountDeleted(), 404);
                 abort_if($advertisement->user_id === $actor->id, 422, 'Нельзя пожаловаться на своё объявление.');
                 abort_if($advertisement->isHidden() || $users->get($advertisement->user_id)?->isBlocked(), 404);
-                abort_unless($advertisement->status === AdvertisementStatus::PUBLISHED
-                    || ($advertisement->status === AdvertisementStatus::CLOSED && ($conversation !== null
+                abort_unless(($advertisement->status === AdvertisementStatus::PUBLISHED && ! $advertisement->publicationExpired())
+                    || (($advertisement->status === AdvertisementStatus::CLOSED || ($advertisement->status === AdvertisementStatus::PUBLISHED && $advertisement->publicationExpired())) && ($conversation !== null
                         || $advertisement->responses()->where('user_id', $actor->id)->whereHas('conversation')->exists())), 404);
                 // Match the public show: the resource expects this explicit projection.
                 // Loading the full owner/profile into the snapshot would expose private data.

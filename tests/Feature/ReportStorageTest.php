@@ -235,6 +235,8 @@ class ReportStorageTest extends TestCase
         $adId = $report->target_id;
         $reporterId = $report->reporter_id;
         // C03 references reports; roll back dependants in migration order.
+        $lifecycleMigration = require database_path('migrations/2026_11_02_120000_add_account_lifecycle.php');
+        $lifecycleMigration->down();
         $resolutionMigration = require database_path('migrations/2026_10_31_120000_create_report_resolution_actions_table.php');
         $resolutionMigration->down();
         $hideMigration = require database_path('migrations/2026_10_30_150000_add_advertisement_hide_action.php');
@@ -253,6 +255,7 @@ class ReportStorageTest extends TestCase
         $blockMigration->up();
         $hideMigration->up();
         $resolutionMigration->up();
+        $lifecycleMigration->up();
         Report::factory()->create(['reporter_id' => $reporterId, 'target_id' => $adId]);
         $this->assertDatabaseCount('reports', 1);
         $this->expectException(UniqueConstraintViolationException::class);

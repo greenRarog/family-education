@@ -20,6 +20,8 @@ use Illuminate\Support\Carbon;
  *
  * @property int $id
  * @property int $advertisement_response_id
+ * @property Carbon|null $account_deleted_at
+ * @property Carbon|null $expires_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read AdvertisementResponse $advertisementResponse
@@ -50,11 +52,30 @@ class Conversation extends Model
 
     public function hasParticipant(User $user): bool
     {
+        if ($user->isAccountDeleted()) {
+            return false;
+        }
         $this->loadMissing('advertisementResponse.advertisement');
         $response = $this->advertisementResponse;
 
         return $response->user_id === $user->id
             || $response->advertisement->user_id === $user->id;
+    }
+
+    protected function casts(): array
+    {
+        return ['account_deleted_at' => 'datetime', 'expires_at' => 'datetime'];
+    }
+
+    /** @param Builder<static> $query */
+    public function scopeRetained(Builder $query): void
+    {
+        $query->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', now()));
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expires_at !== null && $this->expires_at->lte(now());
     }
 
     public function advertisementResponse(): BelongsTo

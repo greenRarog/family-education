@@ -292,6 +292,8 @@ class UserBlockTest extends TestCase
         $report = Report::factory()->create(['reporter_id' => $user->id]);
         app(UserBlockService::class)->block($admin, $user, $this->reason());
         app(UserBlockService::class)->unblock($admin, $user, ['reason' => 'Пересмотр.']);
+        $lifecycle = require database_path('migrations/2026_11_02_120000_add_account_lifecycle.php');
+        $lifecycle->down();
         $migration = require database_path('migrations/2026_10_30_140000_add_user_block_action.php');
         $migration->down();
         $before = DB::table('users')->orderBy('id')->get()->map(fn ($row) => (array) $row)->all();
@@ -306,6 +308,7 @@ class UserBlockTest extends TestCase
         $this->assertSame($before, $after);
         $this->assertDatabaseHas('reports', ['id' => $report->id]);
         $this->assertDatabaseCount('admin_actions', 2);
+        $lifecycle->up();
         $this->expectException(QueryException::class);
         DB::table('users')->where('id', $user->id)->update(['block_action_id' => -1]);
     }

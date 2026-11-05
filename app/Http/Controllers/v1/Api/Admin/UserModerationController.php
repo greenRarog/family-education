@@ -7,6 +7,7 @@ namespace App\Http\Controllers\v1\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdminAction;
 use App\Models\User;
+use App\Services\ModerationRetentionService;
 use App\Services\UserBlockService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,9 +20,9 @@ class UserModerationController extends Controller
         $data = $request->validate(['state' => ['sometimes', Rule::in(['all', 'active', 'blocked'])], 'page' => ['sometimes', 'integer', 'min:1']]);
         $query = User::query()->with('blockingAction')->orderBy('id');
         if (($data['state'] ?? 'all') === 'blocked') {
-            $query->whereNotNull('block_action_id');
+            $query->whereNull('account_deleted_at')->whereNotNull('block_action_id');
         } elseif (($data['state'] ?? 'all') === 'active') {
-            $query->whereNull('block_action_id');
+            $query->whereNull('account_deleted_at')->whereNull('block_action_id');
         }
 
         return response()->json($query->paginate(20)->through(fn (User $user) => $this->card($user)));
@@ -36,7 +37,8 @@ class UserModerationController extends Controller
     {
         $request->validate(['page' => ['sometimes', 'integer', 'min:1']]);
 
-        return response()->json(AdminAction::query()->where('target_type', 'user')->where('target_id', $user->id)->orderByDesc('id')->paginate(20));
+        return response()->json(AdminAction::query()->whereNotIn('id', app(ModerationRetentionService::class)->expiredIds()['actions'])
+            ->where('target_type', 'user')->where('target_id', $user->id)->orderByDesc('id')->paginate(20));
     }
 
     public function rejectAppeal(Request $request, User $user, UserBlockService $blocks): JsonResponse
@@ -47,9 +49,10 @@ class UserModerationController extends Controller
     /** @return array<string, mixed> */
     private function card(User $user): array
     {
-        $decision = $user->blockingAction;
+        $decision = $user->isAccountDeleted() ? null : $user->blockingAction;
 
         return [
+            'account_deleted' => $user->isAccountDeleted(),
             'id' => $user->id, 'name' => $user->name, 'email' => $user->email,
             'user_type' => $user->user_type->value, 'is_blocked' => $user->isBlocked(),
             'block_action_id' => $decision?->id, 'blocked_at' => $decision?->occurred_at->toISOString(),

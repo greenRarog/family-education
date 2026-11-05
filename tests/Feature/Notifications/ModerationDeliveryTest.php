@@ -23,7 +23,7 @@ use Tests\TestCase;
 
 class ModerationDeliveryTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Support\ConfirmedTelegram;
 
     public static function deliveries(): array
     {
@@ -43,7 +43,7 @@ class ModerationDeliveryTest extends TestCase
         $conversation = Conversation::factory()->create();
         $response = $conversation->advertisementResponse;
         $recipient = $response->advertisement->user;
-        $recipient->update(['telegram_chat_id' => 'test-chat']);
+        $this->confirmTelegramFixture($recipient);
         $recipient->notificationSetting()->create(['email_enabled' => true, 'telegram_enabled' => true]);
         $notification = match ($type) {
             'message' => new NewMessageNotification(Message::factory()->create(['conversation_id' => $conversation->id, 'user_id' => $response->user_id])),

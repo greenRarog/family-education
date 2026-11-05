@@ -20,6 +20,8 @@ class AdvertisementExpiredNotification extends Notification implements ShouldQue
         public readonly Advertisement $advertisement,
     ) {
         $this->captureModerationState();
+        $this->captureTelegramBindings();
+        $this->captureMaxBindings();
     }
 
     public function via(object $notifiable): array
@@ -39,6 +41,10 @@ class AdvertisementExpiredNotification extends Notification implements ShouldQue
 
         if ($notifiable->telegramNotificationsEnabled()) {
             $channels[] = 'telegram';
+        }
+
+        if ($notifiable->maxNotificationsEnabled()) {
+            $channels[] = ConfirmedMaxChannel::class;
         }
 
         return $channels;

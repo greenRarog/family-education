@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
  * docker compose exec app php artisan ide-helper:models "App\Models\Advertisement"
  *
  * @property int|null $hide_action_id
+ * @property Carbon|null $account_deleted_at
  * @property-read AdminAction|null $hidingAction
  * @property int $id
  * @property int $user_id
@@ -33,7 +34,7 @@ use Illuminate\Support\Carbon;
  * @property AdvertisementStudyFormat|null $format
  * @property string $language
  * @property LessonType|null $lesson_type
- * @property int $city_id
+ * @property int|null $city_id
  * @property int|null $district_id
  * @property int|null $metro_station_id
  * @property int|null $participant_age_from
@@ -105,6 +106,7 @@ class Advertisement extends Model
     {
         return [
             'hide_action_id' => 'integer',
+            'account_deleted_at' => 'datetime',
             'type' => AdvertisementType::class,
             'status' => AdvertisementStatus::class,
             'format' => AdvertisementStudyFormat::class,
@@ -114,9 +116,56 @@ class Advertisement extends Model
         ];
     }
 
+    public function publicationExpiresAt(): ?Carbon
+    {
+        return $this->published_at?->copy()->utc()->addYearNoOverflow();
+    }
+
+    public function publicationExpired(?Carbon $at = null): bool
+    {
+        return $this->publicationExpiresAt()?->lte($at ?? now()) ?? false;
+    }
+
+    /** @param Builder<Advertisement> $query
+     * @return Builder<Advertisement>
+     */
+    public function scopeExpired(Builder $query, ?Carbon $at = null): Builder
+    {
+        return $query->whereRaw($this->publicationDeadlineSql($query).' <= ?', [($at ?? now())->copy()->utc()->toDateTimeString()]);
+    }
+
+    /** @param Builder<Advertisement> $query
+     * @return Builder<Advertisement>
+     */
+    public function scopeUnexpired(Builder $query, ?Carbon $at = null): Builder
+    {
+        // Legacy records without a publication date have no invented expiry date.
+        return $query->where(fn (Builder $q) => $q->whereNull('published_at')
+            ->orWhereRaw($this->publicationDeadlineSql($query).' > ?', [($at ?? now())->copy()->utc()->toDateTimeString()]));
+    }
+
+    /** Same calendar-year clamp as publicationExpiresAt(), before SQL pagination.
+     * @param  Builder<Advertisement>  $query
+     */
+    private function publicationDeadlineSql(Builder $query): string
+    {
+        $column = $query->qualifyColumn('published_at');
+
+        return match ($query->getModel()->getConnection()->getDriverName()) {
+            'pgsql' => "($column + interval '1 year')",
+            'sqlite' => "(CASE WHEN strftime('%m-%d', $column) = '02-29' THEN datetime($column, '+1 year', '-1 day') ELSE datetime($column, '+1 year') END)",
+            default => throw new \LogicException('Advertisement expiry supports the configured PostgreSQL and SQLite stores.'),
+        };
+    }
+
     public function isHidden(): bool
     {
-        return $this->hide_action_id !== null;
+        return ! $this->isAccountDeleted() && $this->hide_action_id !== null;
+    }
+
+    public function isAccountDeleted(): bool
+    {
+        return $this->account_deleted_at !== null;
     }
 
     /** @return BelongsTo<AdminAction, $this> */
@@ -130,7 +179,7 @@ class Advertisement extends Model
      */
     public function moderationDetails(): array
     {
-        $decision = $this->hidingAction;
+        $decision = $this->isAccountDeleted() ? null : $this->hidingAction;
 
         return [
             'is_hidden' => $this->isHidden(), 'decision_id' => $decision?->id,

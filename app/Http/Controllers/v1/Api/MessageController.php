@@ -19,6 +19,8 @@ class MessageController extends Controller
     public function store(StoreMessageRequest $request, Conversation $conversation): JsonResponse
     {
         abort_unless($conversation->hasParticipant($request->user()), 403);
+        abort_if($conversation->isExpired(), 404);
+        abort_if($conversation->account_deleted_at !== null, 403, 'Диалог завершён: аккаунт удалён.');
         $conversation->load('advertisementResponse');
         $advertisementResponse = $conversation->advertisementResponse;
         if ($advertisementResponse->status === AdvertisementResponseStatus::REJECTED) {
@@ -51,6 +53,8 @@ class MessageController extends Controller
     public function read(Request $request, Conversation $conversation): JsonResponse
     {
         abort_unless($conversation->hasParticipant($request->user()), 403);
+        abort_if($conversation->isExpired(), 404);
+        abort_if($conversation->account_deleted_at !== null, 403, 'Диалог доступен только для чтения.');
         $data = $request->validate([
             'through_id' => ['nullable', 'integer', 'min:1'],
         ]);

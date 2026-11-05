@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property bool $email_enabled
  * @property bool $telegram_enabled
+ * @property bool $max_enabled
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User $user
@@ -47,6 +48,7 @@ class NotificationSetting extends Model
         'user_id',
         'email_enabled',
         'telegram_enabled',
+        'max_enabled',
     ];
 
     protected function casts(): array
@@ -54,6 +56,7 @@ class NotificationSetting extends Model
         return [
             'email_enabled' => 'boolean',
             'telegram_enabled' => 'boolean',
+            'max_enabled' => 'boolean',
         ];
     }
 

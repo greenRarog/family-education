@@ -11,6 +11,7 @@ use App\Models\AdminAction;
 use App\Models\Advertisement;
 use App\Models\Report;
 use App\Models\User;
+use App\Services\ModerationRetentionService;
 use App\Services\ReportResolutionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ class ReportModerationController extends Controller
             'target_type' => ['sometimes', Rule::in(['all', ...array_column(ReportTargetType::cases(), 'value')])],
             'page' => ['sometimes', 'integer', 'min:1'],
         ]);
-        $query = Report::query()->orderByDesc('id');
+        $query = Report::query()->whereNotIn('id', app(ModerationRetentionService::class)->expiredIds()['reports'])->orderByDesc('id');
         if (($data['status'] ?? 'open') !== 'all') {
             $query->where('status', $data['status'] ?? 'open');
         }
@@ -33,16 +34,19 @@ class ReportModerationController extends Controller
             $query->where('target_type', $data['target_type']);
         }
 
-        return response()->json($query->paginate(20, ['id', 'reporter_id', 'target_type', 'target_id', 'reason', 'status', 'created_at', 'resolved_at']));
+        return response()->json($query->paginate(20, ['id', 'reporter_id', 'target_type', 'target_id', 'reason', 'status', 'resolution_outcome', 'created_at', 'resolved_at']));
     }
 
     public function show(Report $report): JsonResponse
     {
+        abort_if(in_array($report->id, app(ModerationRetentionService::class)->expiredIds()['reports'], true), 404);
+
         return response()->json(['report' => $this->card($report)]);
     }
 
     public function history(Request $request, Report $report): JsonResponse
     {
+        abort_if(in_array($report->id, app(ModerationRetentionService::class)->expiredIds()['reports'], true), 404);
         $request->validate(['page' => ['sometimes', 'integer', 'min:1']]);
         $linked = $report->resolutionActions()->pluck('admin_actions.id');
 
@@ -65,9 +69,9 @@ class ReportModerationController extends Controller
 
         return array_merge($report->attributesToArray(), [
             'reporter' => $report->reporter->only(['id', 'name', 'email', 'user_type']),
-            'target_exists' => $report->target_type === 'advertisement' ? $ad !== null : $user !== null,
+            'target_exists' => $report->target_type === 'advertisement' ? ($ad !== null && ! $ad->isAccountDeleted()) : ($user !== null && ! $user->isAccountDeleted()),
             'target_user_id' => $user?->id,
-            'active_action_ids' => array_values(array_filter([$user?->block_action_id, $ad?->hide_action_id])),
+            'active_action_ids' => array_values(array_filter([$user?->isAccountDeleted() ? null : $user?->block_action_id, $ad?->isAccountDeleted() ? null : $ad?->hide_action_id])),
             'resolution_action_ids' => $report->resolutionActions()->pluck('admin_actions.id')->all(),
         ]);
     }

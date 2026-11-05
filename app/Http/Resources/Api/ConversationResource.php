@@ -19,13 +19,16 @@ class ConversationResource extends JsonResource
         $advertisement = $response->advertisement;
         $ownerBlocked = $advertisement->user->isBlocked();
         $authorBlocked = $response->user->isBlocked();
-        $paused = $ownerBlocked || $authorBlocked;
+        $ended = $r->account_deleted_at !== null;
+        $paused = $ownerBlocked || $authorBlocked || $ended;
         $isOwner = $advertisement->user_id === $request->user()?->id;
-        $unavailable = ($ownerBlocked || $advertisement->isHidden()) && ! $isOwner;
+        $unavailable = $advertisement->isAccountDeleted() || (($ownerBlocked || $advertisement->isHidden()) && ! $isOwner);
 
         return [
             'id' => $r->id,
             'communication_paused' => $paused,
+            'account_deleted' => $ended,
+            'expires_at' => $r->expires_at?->toISOString(),
             'advertisement' => $unavailable ? [
                 'id' => $advertisement->id,
                 'type' => $advertisement->type->value,
@@ -49,15 +52,15 @@ class ConversationResource extends JsonResource
                 $this->whenLoaded('messages')
             ),
             'last_message' => $this->whenLoaded('lastMessage', fn () => new MessageResource($r->lastMessage)),
-            'unread_count' => (int) $r->getAttribute('unread_messages_count'),
+            'unread_count' => $ended ? 0 : (int) $r->getAttribute('unread_messages_count'),
             'viewer' => [
                 'id' => $request->user()?->id,
                 'can_accept' => $isOwner && ! $paused && $response->status === AdvertisementResponseStatus::SENT,
-                'can_reject' => $isOwner && ! $ownerBlocked && $response->status !== AdvertisementResponseStatus::REJECTED,
+                'can_reject' => $isOwner && ! $ended && ! $ownerBlocked && $response->status !== AdvertisementResponseStatus::REJECTED,
                 'is_advertisement_owner' => $advertisement->user_id === $request->user()?->id,
                 'is_response_author' => $response->user_id === $request->user()?->id,
             ],
-            'has_unread_messages' => (bool) $r->getAttribute('has_unread_messages'),
+            'has_unread_messages' => ! $ended && (bool) $r->getAttribute('has_unread_messages'),
             'created_at' => $r->created_at,
             'updated_at' => $r->updated_at,
         ];
