@@ -6,6 +6,7 @@ use App\Http\Controllers\v1\Api\AccountDeletionController;
 use App\Http\Controllers\v1\Api\Admin\AdvertisementModerationController;
 use App\Http\Controllers\v1\Api\Admin\BlockedTermController;
 use App\Http\Controllers\v1\Api\Admin\CityController;
+use App\Http\Controllers\v1\Api\Admin\CountryController;
 use App\Http\Controllers\v1\Api\Admin\DashboardController;
 use App\Http\Controllers\v1\Api\Admin\DistrictController;
 use App\Http\Controllers\v1\Api\Admin\MetroStationController;
@@ -35,6 +36,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/integrations/max/webhook', MaxWebhookController::class);
 
+Route::get('/countries', [LocationController::class, 'countries']);
 Route::get('/cities', [LocationController::class, 'cities']);
 Route::get('/cities/{city}/districts', [LocationController::class, 'districts']);
 Route::get('/cities/{city}/metro-stations', [LocationController::class, 'metroStations']);
@@ -112,6 +114,7 @@ Route::middleware(['auth', 'admin', 'web'])
         Route::post('users/{user}/appeal-rejected', [UserModerationController::class, 'rejectAppeal']);
         Route::post('users/{user}/block', [UserBlockController::class, 'block']);
         Route::post('users/{user}/unblock', [UserBlockController::class, 'unblock']);
+        Route::apiResource('countries', CountryController::class);
         Route::apiResource('cities', CityController::class);
         Route::apiResource('districts', DistrictController::class);
         Route::apiResource('metro-stations', MetroStationController::class);

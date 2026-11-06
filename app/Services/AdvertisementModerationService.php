@@ -12,6 +12,7 @@ use App\Models\AdminAction;
 use App\Models\Advertisement;
 use App\Models\Report;
 use App\Models\User;
+use App\Rules\NoBannedWords;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -38,7 +39,7 @@ class AdvertisementModerationService
                 'decision_id' => $input['decision_id'] ?? null,
             ], [
                 'reason_code' => ['required', Rule::in($hidden ? array_column(ReportReason::cases(), 'value') : ['restriction_removed', 'review'])],
-                'reason' => ['required', 'string', 'min:'.($hidden ? 10 : 1), 'max:1000'],
+                'reason' => [new NoBannedWords, 'required', 'string', 'min:'.($hidden ? 10 : 1), 'max:1000'],
                 'decision_id' => ['nullable', 'integer', 'min:1'],
             ])->validate();
             if (array_key_exists('decision_id', $input)) {
@@ -73,7 +74,7 @@ class AdvertisementModerationService
         $data = Validator::make([
             'decision_id' => $input['decision_id'] ?? null,
             'reason' => is_string($input['reason'] ?? null) ? trim($input['reason']) : ($input['reason'] ?? null),
-        ], ['decision_id' => ['required', 'integer', 'min:1'], 'reason' => ['required', 'string']])->validate();
+        ], ['decision_id' => ['required', 'integer', 'min:1'], 'reason' => [new NoBannedWords, 'required', 'string']])->validate();
 
         return $target->getConnection()->transaction(function () use ($actor, $target, $data): array {
             $actor = $this->actor($actor, $target);

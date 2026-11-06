@@ -16,19 +16,11 @@ class BannedWordSeeder extends Seeder
      */
     public function run(): void
     {
-        $path = database_path('data/banned_words.json');
-
-        $words = json_decode(
-            File::get($path),
-            true,
-            512,
-            JSON_THROW_ON_ERROR,
-        );
-
-        foreach ($words as $word) {
-            BannedWord::firstOrCreate([
-                'word' => mb_strtolower(trim($word['word'])),
-            ]);
+        foreach (['banned_words.json', 'banned_words_en.json', 'banned_words_es.json'] as $file) {
+            $words = json_decode(File::get(database_path('data/'.$file)), true, 512, JSON_THROW_ON_ERROR);
+            foreach ($words as $word) {
+                BannedWord::firstOrCreate(['word' => mb_strtolower(trim($word['word']))]);
+            }
         }
     }
 }

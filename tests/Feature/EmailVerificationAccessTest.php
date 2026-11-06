@@ -14,6 +14,7 @@ use App\Models\Advertisement;
 use App\Models\Child;
 use App\Models\City;
 use App\Models\Conversation;
+use App\Models\Country;
 use App\Models\Family;
 use App\Models\Subject;
 use App\Models\User;
@@ -183,13 +184,13 @@ class EmailVerificationAccessTest extends TestCase
         $this->actingAs($admin)->getJson('/api/admin/cities')->assertOk();
         foreach ([['post', '/api/admin/cities'], ['put', '/api/admin/cities/'.$city->id],
             ['patch', '/api/admin/cities/'.$city->id], ['delete', '/api/admin/cities/'.$city->id]] as [$method, $path]) {
-            $this->json(strtoupper($method), $path, ['name' => 'Новый город'])->assertForbidden()
+            $this->json(strtoupper($method), $path, ['name' => 'Новый город', 'country_id' => Country::where('code', 'RU')->sole()->id])->assertForbidden()
                 ->assertJsonPath('code', 'email_verification_required');
         }
         $this->assertDatabaseCount('cities', 1);
         $this->assertSame($city->name, $city->fresh()->name);
         $admin->markEmailAsVerified();
-        $this->postJson('/api/admin/cities', ['name' => 'Новый город'])->assertCreated();
+        $this->postJson('/api/admin/cities', ['name' => 'Новый город', 'country_id' => Country::where('code', 'RU')->sole()->id])->assertCreated();
         $this->actingAs(User::factory()->create())->postJson('/api/admin/cities', ['name' => 'Чужое действие'])->assertForbidden();
     }
 

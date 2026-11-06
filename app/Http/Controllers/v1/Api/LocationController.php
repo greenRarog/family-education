@@ -6,16 +6,26 @@ namespace App\Http\Controllers\v1\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\City;
+use App\Models\Country;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class LocationController extends Controller
 {
-    public function cities(): JsonResponse
+    public function countries(): JsonResponse
     {
+        return response()->json(Country::query()->orderBy('name')->get(['id', 'code', 'name']));
+    }
+
+    public function cities(Request $request): JsonResponse
+    {
+        $data = $request->validate(['country_id' => ['nullable', 'integer', 'exists:countries,id']]);
+
         return response()->json(
             City::query()
+                ->when($data['country_id'] ?? null, fn ($query, $country) => $query->where('country_id', $country))
                 ->orderBy('name')
-                ->get(['id', 'name'])
+                ->get(['id', 'country_id', 'name'])
         );
     }
 
@@ -40,9 +50,10 @@ class LocationController extends Controller
     public function index(): JsonResponse
     {
         return response()->json([
+            'countries' => Country::query()->orderBy('name')->get(['id', 'code', 'name']),
             'cities' => City::query()
                 ->orderBy('name')
-                ->get(['id', 'name']),
+                ->get(['id', 'country_id', 'name']),
 
             'districts' => City::query()
                 ->with([

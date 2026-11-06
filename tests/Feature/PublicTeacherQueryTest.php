@@ -54,8 +54,9 @@ class PublicTeacherQueryTest extends TestCase
             ->assertJsonPath('advertisements.total', 21)->assertJsonPath('advertisements.last_page', 2);
         $counts[] = count($queries);
         $this->assertSame(array_fill(0, 4, $counts[0]), $counts, 'Queries for 1/5/20 ads and page 2: '.json_encode($counts));
-        // Count, ads, ad subjects/cities and four batched teacher relations.
-        $this->assertLessThanOrEqual(8, $counts[0]);
+        // Count, ads, ad subjects/cities and four batched teacher relations,
+        // plus two batched country lookups (ad city and teacher city).
+        $this->assertLessThanOrEqual(10, $counts[0]);
         [$empty, $queries] = $this->requestQueries('/api/advertisements/feed?type=teacher_to_service&page=3');
         $empty->assertOk()->assertJsonCount(0, 'advertisements.data');
         $this->assertLessThanOrEqual(2, count($queries));
@@ -88,7 +89,7 @@ class PublicTeacherQueryTest extends TestCase
             $profile = $teacher->teacherProfile;
             $this->assertSame([
                 'id' => $teacher->id, 'name' => $teacher->name, 'surname' => $profile->surname,
-                'city' => $profile->city->only(['id', 'name']),
+                'city' => ['id' => $profile->city->id, 'name' => $profile->city->name, 'country' => $profile->city->country->toArray()],
                 'subjects' => $profile->subjects->map->only(['id', 'name'])->all(),
             ], $detail['public_teacher']);
         } else {

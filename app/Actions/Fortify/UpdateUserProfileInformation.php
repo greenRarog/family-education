@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Enums\TeacherProfileVisibilityStatus;
 use App\Enums\UserType;
 use App\Models\User;
+use App\Rules\NoBannedWords;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -22,7 +23,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
     public function update(User $user, array $input): void
     {
         Validator::make($input, [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [new NoBannedWords, 'required', 'string', 'max:255'],
 
             'email' => [
                 'required',

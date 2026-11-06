@@ -13,6 +13,7 @@ use App\Models\AdminAction;
 use App\Models\Advertisement;
 use App\Models\Report;
 use App\Models\User;
+use App\Rules\NoBannedWords;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
@@ -49,7 +50,7 @@ class UserBlockService
     {
         $data = Validator::make($input, [
             'decision_id' => ['required', 'integer', 'min:1'],
-            'reason' => ['required', 'string'],
+            'reason' => [new NoBannedWords, 'required', 'string'],
         ])->validate();
         $reason = trim($data['reason']);
         if ($reason === '') {
@@ -153,7 +154,7 @@ class UserBlockService
             'reason' => is_string($input['reason'] ?? null) ? trim($input['reason']) : ($input['reason'] ?? null),
         ], [
             'reason_code' => ['required', 'string', Rule::in($codes)],
-            'reason' => ['required', 'string', 'min:'.($blocked ? 10 : 1), 'max:1000'],
+            'reason' => [new NoBannedWords, 'required', 'string', 'min:'.($blocked ? 10 : 1), 'max:1000'],
         ])->validate();
     }
 

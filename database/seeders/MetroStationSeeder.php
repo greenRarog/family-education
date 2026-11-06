@@ -32,7 +32,7 @@ class MetroStationSeeder extends Seeder
             if (in_array($metro['name'], $this->except, true)) {
                 continue;
             }
-            $city = City::where('name', $metro['name'])->first();
+            $city = City::whereRelation('country', 'code', 'RU')->where('name', $metro['name'])->first();
             if ($city === null) {
                 dd($metro);
             }

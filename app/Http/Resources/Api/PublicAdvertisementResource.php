@@ -34,7 +34,7 @@ class PublicAdvertisementResource extends JsonResource
             'participant_age_to' => $advertisement->participant_age_to,
             'published_at' => $advertisement->published_at,
             'closed_at' => $advertisement->closed_at,
-            'city' => $advertisement->city->only(['id', 'name']),
+            'city' => $advertisement->city->only(['id', 'name', 'country']),
             'district' => $advertisement->district?->only(['id', 'name']),
             'metro_station' => $advertisement->metroStation?->only(['id', 'name']),
             'subjects' => $advertisement->subjects->map->only(['id', 'name']),
@@ -42,7 +42,7 @@ class PublicAdvertisementResource extends JsonResource
                 'id' => $teacher['id'],
                 'name' => $teacher['name'],
                 'surname' => $teacher['surname'],
-                'city' => $teacher['city']?->only(['id', 'name']),
+                'city' => $teacher['city']?->only(['id', 'name', 'country']),
                 'subjects' => $teacher['subjects']->map->only(['id', 'name']),
             ],
         ];

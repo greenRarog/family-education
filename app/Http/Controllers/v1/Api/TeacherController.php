@@ -14,6 +14,7 @@ use App\Models\District;
 use App\Models\MetroStation;
 use App\Models\TeacherProfile;
 use App\Models\User;
+use App\Rules\NoBannedWords;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -46,14 +47,14 @@ class TeacherController extends Controller
         $profile = $user->teacherProfile()->firstOrFail();
 
         $data = $request->validate([
-            'surname' => ['required', 'string', 'max:255'],
+            'surname' => [new NoBannedWords, 'required', 'string', 'max:255'],
             'city_id' => ['required', 'integer', 'exists:cities,id'],
             'district_id' => ['nullable', 'integer', 'exists:districts,id'],
             'metro_station_id' => ['nullable', 'integer', 'exists:metro_stations,id'],
             'subject_ids' => ['required', 'array', 'min:1'],
             'subject_ids.*' => ['required', 'integer', 'distinct', 'exists:subjects,id'],
-            'about' => ['nullable', 'string', 'max:3000'],
-            'education' => ['nullable', 'string', 'max:3000'],
+            'about' => [new NoBannedWords, 'nullable', 'string', 'max:3000'],
+            'education' => [new NoBannedWords, 'nullable', 'string', 'max:3000'],
             'public_profile_requested' => ['required', 'boolean'],
         ]);
 

@@ -11,6 +11,7 @@ use App\Exceptions\EmailVerificationRequired;
 use App\Models\Advertisement;
 use App\Models\Report;
 use App\Models\User;
+use App\Rules\NoBannedWords;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -40,6 +41,7 @@ class ReportResolutionService
             $userId = $current->target_type === 'user' ? $current->target_id : $ad?->user_id;
             $target = $userId === null ? null : User::on($connection)->whereKey($userId)->lockForUpdate()->first();
             abort_unless($target?->isAccountDeleted(), 422, 'Аккаунт цели не удалён.');
+            Validator::make(['resolution_note' => $note], ['resolution_note' => [new NoBannedWords]])->validate();
             if (trim($note) === '') {
                 throw ValidationException::withMessages(['resolution_note' => 'Укажите пояснение.']);
             }
@@ -67,13 +69,13 @@ class ReportResolutionService
             abort_unless($current->status === ReportStatus::OPEN, 409, 'Жалоба уже обработана. Обновите карточку.');
             $data = Validator::make($input, [
                 'status' => ['required', Rule::in(['resolved', 'dismissed'])],
-                'resolution_note' => ['required', 'string'],
+                'resolution_note' => [new NoBannedWords, 'required', 'string'],
                 'actions' => ['sometimes', 'array'],
                 'actions.*' => ['string', 'distinct', Rule::in(['block_user', 'hide_advertisement'])],
                 'existing_action_ids' => ['sometimes', 'array'],
                 'existing_action_ids.*' => ['integer', 'min:1', 'distinct'],
                 'sanction_reason_code' => ['nullable', 'string'],
-                'sanction_reason' => ['nullable', 'string'],
+                'sanction_reason' => [new NoBannedWords, 'nullable', 'string'],
             ])->validate();
             $note = trim($data['resolution_note']);
             if ($note === '') {

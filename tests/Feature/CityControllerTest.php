@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\UserType;
 use App\Models\City;
+use App\Models\Country;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -20,8 +21,10 @@ class CityControllerTest extends TestCase
             'user_type' => UserType::ADMIN,
         ]);
 
-        City::factory()->create(['name' => 'Москва']);
-        City::factory()->create(['name' => 'Санкт-Петербург']);
+        City::factory()->create(['country_id' => Country::where('code', 'RU')->sole()->id,
+            'name' => 'Москва']);
+        City::factory()->create(['country_id' => Country::where('code', 'RU')->sole()->id,
+            'name' => 'Санкт-Петербург']);
 
         $response = $this
             ->actingAs($admin)
@@ -30,8 +33,10 @@ class CityControllerTest extends TestCase
         $response
             ->assertOk()
             ->assertJsonCount(2)
-            ->assertJsonFragment(['name' => 'Москва'])
-            ->assertJsonFragment(['name' => 'Санкт-Петербург']);
+            ->assertJsonFragment(['country_id' => Country::where('code', 'RU')->sole()->id,
+                'name' => 'Москва'])
+            ->assertJsonFragment(['country_id' => Country::where('code', 'RU')->sole()->id,
+                'name' => 'Санкт-Петербург']);
     }
 
     public function test_family_cannot_get_cities(): void
@@ -63,16 +68,19 @@ class CityControllerTest extends TestCase
         $response = $this
             ->actingAs($admin)
             ->postJson('/api/admin/cities', [
+                'country_id' => Country::where('code', 'RU')->sole()->id,
                 'name' => 'Краснодар',
             ]);
 
         $response
             ->assertCreated()
             ->assertJson([
+                'country_id' => Country::where('code', 'RU')->sole()->id,
                 'name' => 'Краснодар',
             ]);
 
         $this->assertDatabaseHas('cities', [
+            'country_id' => Country::where('code', 'RU')->sole()->id,
             'name' => 'Краснодар',
         ]);
     }
@@ -84,23 +92,27 @@ class CityControllerTest extends TestCase
         ]);
 
         $city = City::factory()->create([
+            'country_id' => Country::where('code', 'RU')->sole()->id,
             'name' => 'Краснодар',
         ]);
 
         $response = $this
             ->actingAs($admin)
             ->putJson("/api/admin/cities/{$city->id}", [
+                'country_id' => Country::where('code', 'RU')->sole()->id,
                 'name' => 'Новый Краснодар',
             ]);
 
         $response
             ->assertOk()
             ->assertJson([
+                'country_id' => Country::where('code', 'RU')->sole()->id,
                 'name' => 'Новый Краснодар',
             ]);
 
         $this->assertDatabaseHas('cities', [
             'id' => $city->id,
+            'country_id' => Country::where('code', 'RU')->sole()->id,
             'name' => 'Новый Краснодар',
         ]);
     }
@@ -133,6 +145,7 @@ class CityControllerTest extends TestCase
         $response = $this
             ->actingAs($user)
             ->postJson('/api/admin/cities', [
+                'country_id' => Country::where('code', 'RU')->sole()->id,
                 'name' => 'Краснодар',
             ]);
 
@@ -150,6 +163,7 @@ class CityControllerTest extends TestCase
         $response = $this
             ->actingAs($user)
             ->putJson("/api/admin/cities/{$city->id}", [
+                'country_id' => Country::where('code', 'RU')->sole()->id,
                 'name' => 'Новый город',
             ]);
 
@@ -178,6 +192,7 @@ class CityControllerTest extends TestCase
     public function test_guest_cannot_create_city(): void
     {
         $response = $this->postJson('/api/admin/cities', [
+            'country_id' => Country::where('code', 'RU')->sole()->id,
             'name' => 'Краснодар',
         ]);
 
@@ -190,6 +205,7 @@ class CityControllerTest extends TestCase
 
         $response = $this
             ->putJson("/api/admin/cities/{$city->id}", [
+                'country_id' => Country::where('code', 'RU')->sole()->id,
                 'name' => 'Новый город',
             ]);
 

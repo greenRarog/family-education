@@ -17,9 +17,9 @@ class FamilySeeder extends Seeder
 {
     public function run(): void
     {
-        $moscow = City::where('name', 'Москва')->firstOrFail();
-        $spb = City::where('name', 'Санкт-Петербург')->firstOrFail();
-        $krasnodar = City::where('name', 'Краснодар')->firstOrFail();
+        $moscow = City::whereRelation('country', 'code', 'RU')->where('name', 'Москва')->firstOrFail();
+        $spb = City::whereRelation('country', 'code', 'RU')->where('name', 'Санкт-Петербург')->firstOrFail();
+        $krasnodar = City::whereRelation('country', 'code', 'RU')->where('name', 'Краснодар')->firstOrFail();
 
         $khamovniki = District::where('city_id', $moscow->id)
             ->where('name', 'Хамовники')

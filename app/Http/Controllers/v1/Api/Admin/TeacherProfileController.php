@@ -8,6 +8,7 @@ use App\Enums\TeacherProfileVisibilityStatus;
 use App\Exceptions\EmailVerificationRequired;
 use App\Http\Controllers\Controller;
 use App\Models\TeacherProfile;
+use App\Rules\NoBannedWords;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -42,6 +43,18 @@ class TeacherProfileController extends Controller
         if (! $teacherProfile->user->hasVerifiedEmail()) {
             throw new EmailVerificationRequired(profileOwner: true);
         }
+
+        validator([
+            'name' => $teacherProfile->user->name,
+            'surname' => $teacherProfile->surname,
+            'about' => $teacherProfile->about,
+            'education' => $teacherProfile->education,
+        ], [
+            'name' => [new NoBannedWords],
+            'surname' => [new NoBannedWords],
+            'about' => ['nullable', new NoBannedWords],
+            'education' => ['nullable', new NoBannedWords],
+        ])->validate();
 
         $teacherProfile->update([
             'public_profile_status' => TeacherProfileVisibilityStatus::APPROVED,

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\v1\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Subject;
+use App\Rules\NoBannedWords;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -23,7 +24,7 @@ class SubjectController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:subjects,name'],
+            'name' => [new NoBannedWords, 'required', 'string', 'max:255', 'unique:subjects,name'],
         ]);
 
         $subject = Subject::create($data);
@@ -40,6 +41,7 @@ class SubjectController extends Controller
     {
         $data = $request->validate([
             'name' => [
+                new NoBannedWords,
                 'required',
                 'string',
                 'max:255',

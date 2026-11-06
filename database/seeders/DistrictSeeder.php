@@ -193,7 +193,7 @@ class DistrictSeeder extends Seeder
         ];
 
         foreach ($districts as $cityName => $names) {
-            $city = City::query()
+            $city = City::query()->whereRelation('country', 'code', 'RU')
                 ->where('name', $cityName)
                 ->first();
 

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -17,6 +18,8 @@ use Illuminate\Support\Carbon;
  * docker compose exec app php artisan ide-helper:models "App\Models\City"
  *
  * @property int $id
+ * @property int $country_id
+ * @property-read Country $country
  * @property string $name
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -45,9 +48,18 @@ class City extends Model
 
     protected $table = 'cities';
 
+    protected $with = ['country'];
+
     protected $fillable = [
         'name',
+        'country_id',
     ];
+
+    /** @return BelongsTo<Country, $this> */
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
 
     public function families(): HasMany
     {

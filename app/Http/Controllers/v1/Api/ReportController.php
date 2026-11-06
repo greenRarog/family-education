@@ -18,6 +18,7 @@ use App\Models\Advertisement;
 use App\Models\Conversation;
 use App\Models\Report;
 use App\Models\User;
+use App\Rules\NoBannedWords;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +42,7 @@ class ReportController extends Controller
             'context_type' => ['required', Rule::enum(ReportContextType::class)],
             'context_id' => ['required', 'integer', 'min:1'],
             'reason' => ['required', Rule::enum(ReportReason::class), Rule::notIn($request->input('target_type') === 'user' ? ['off_topic'] : [])],
-            'comment' => ['nullable', 'string', 'max:2000', Rule::requiredIf($request->input('reason') === 'other'), $request->input('reason') === 'other' ? 'min:10' : 'min:0'],
+            'comment' => [new NoBannedWords, 'nullable', 'string', 'max:2000', Rule::requiredIf($request->input('reason') === 'other'), $request->input('reason') === 'other' ? 'min:10' : 'min:0'],
         ]);
         $conversation = null;
         $advertisement = null;
@@ -114,7 +115,7 @@ class ReportController extends Controller
                         && $profile->public_profile_status === TeacherProfileVisibilityStatus::APPROVED, 404);
                     $snapshot['teacher'] = [
                         'id' => $targetUser->id, 'name' => $targetUser->name, 'surname' => $profile->surname,
-                        'city' => $profile->city->only(['id', 'name']),
+                        'city' => $profile->city->only(['id', 'name', 'country']),
                         'subjects' => $profile->subjects->map->only(['id', 'name'])->all(),
                     ];
                 }

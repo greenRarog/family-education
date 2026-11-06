@@ -19,8 +19,8 @@ use App\Models\AdvertisementResponse;
 use App\Models\District;
 use App\Models\MetroStation;
 use App\Models\User;
+use App\Rules\NoBannedWords;
 use App\Services\AdvertisementClosureService;
-use App\Services\BannedWordChecker;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,15 +30,12 @@ use Illuminate\Validation\ValidationException;
 
 class AdvertisementController extends Controller
 {
-    public function __construct(
-        private readonly BannedWordChecker $bannedWordChecker,
-    ) {}
-
     public function feed(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'type' => ['nullable', Rule::enum(AdvertisementType::class)],
-            'city_id' => ['nullable', 'integer', 'exists:cities,id'],
+            'country_id' => ['nullable', 'integer', 'exists:countries,id'],
+            'city_id' => ['nullable', 'integer', Rule::exists('cities', 'id')->when($request->filled('country_id'), fn ($rule) => $rule->where('country_id', $request->input('country_id')))],
             'age' => ['nullable', 'integer', 'min:0', 'max:100'],
             'subject_id' => ['nullable', 'integer', 'exists:subjects,id'],
             'format' => ['nullable', Rule::enum(AdvertisementStudyFormat::class)],
@@ -62,6 +59,10 @@ class AdvertisementController extends Controller
 
         if (! empty($validated['language'])) {
             $query->where('language', $validated['language']);
+        }
+
+        if (! empty($validated['country_id'])) {
+            $query->whereHas('city', fn ($city) => $city->where('country_id', $validated['country_id']));
         }
 
         if (! empty($validated['city_id'])) {
@@ -270,6 +271,9 @@ class AdvertisementController extends Controller
             ], 422);
         }
 
+        // Recheck old drafts against the current dictionary before publication.
+        validator(['description' => $advertisement->description], ['description' => [new NoBannedWords]])->validate();
+
         $advertisement->update([
             'status' => AdvertisementStatus::PUBLISHED,
             'published_at' => now(),
@@ -457,6 +461,8 @@ class AdvertisementController extends Controller
             ],
 
             'description' => [
+
+                new NoBannedWords,
                 'required',
                 'string',
                 'max:5000',
@@ -513,12 +519,6 @@ class AdvertisementController extends Controller
         ) {
             throw ValidationException::withMessages([
                 'metro_station_id' => 'Выбранная станция метро не относится к выбранному городу.',
-            ]);
-        }
-
-        if ($this->bannedWordChecker->containsBannedWord($data['description'])) {
-            throw ValidationException::withMessages([
-                'description' => 'Описание содержит запрещённое слово.',
             ]);
         }
 

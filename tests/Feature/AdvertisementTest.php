@@ -580,9 +580,7 @@ class AdvertisementTest extends TestCase
                 'advertisements.data.0.id',
                 $teacherAdvertisement->id
             )
-            ->assertJsonMissing([
-                'id' => $familyAdvertisement->id,
-            ]);
+            ->assertJsonMissingPath('advertisements.data.1');
     }
 
     public function test_public_feed_can_filter_advertisements_by_language(): void

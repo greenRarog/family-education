@@ -12,6 +12,7 @@ use App\Models\Family;
 use App\Models\MetroStation;
 use App\Models\TeacherProfile;
 use App\Models\User;
+use App\Rules\NoBannedWords;
 use App\Services\TurnstileService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -58,7 +59,7 @@ class CreateNewUser implements CreatesNewUsers
         $isTeacher = $userType === UserType::TEACHER->value;
 
         $rules = [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [new NoBannedWords, 'required', 'string', 'max:255'],
             'email' => [
                 'required',
                 'string',
@@ -77,7 +78,7 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::in([UserType::FAMILY->value, UserType::TEACHER->value]),
             ],
             'language' => ['nullable', Rule::enum(SupportedLanguage::class)],
-            'surname' => ['required', 'string', 'max:255'],
+            'surname' => [new NoBannedWords, 'required', 'string', 'max:255'],
 
             'city_id' => [
                 'required',
@@ -103,13 +104,13 @@ class CreateNewUser implements CreatesNewUsers
             $rules += [
                 'subject_ids' => ['required', 'array', 'min:1'],
                 'subject_ids.*' => ['required', 'integer', 'distinct', Rule::exists('subjects', 'id')],
-                'about' => ['nullable', 'string', 'max:3000'],
-                'education' => ['nullable', 'string', 'max:3000'],
+                'about' => [new NoBannedWords, 'nullable', 'string', 'max:3000'],
+                'education' => [new NoBannedWords, 'nullable', 'string', 'max:3000'],
             ];
         } else {
             $rules += [
                 'children' => ['required', 'array', 'min:1'],
-                'children.*.name' => ['required', 'string', 'max:255'],
+                'children.*.name' => [new NoBannedWords, 'required', 'string', 'max:255'],
                 'children.*.birth_date' => ['required', 'date', 'before:tomorrow'],
                 'children.*.sex' => ['required', 'string', 'in:male,female'],
             ];

@@ -6,8 +6,10 @@ namespace App\Http\Controllers\v1\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\City;
+use App\Rules\NoBannedWords;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CityController extends Controller
 {
@@ -19,11 +21,12 @@ class CityController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:cities,name'],
+            'country_id' => ['required', 'integer', 'exists:countries,id'],
+            'name' => [new NoBannedWords, 'required', 'string', 'max:255', Rule::unique('cities', 'name')->where('country_id', $request->input('country_id'))],
         ]);
         $city = City::create($data);
 
-        return response()->json($city, 201);
+        return response()->json($city->load('country'), 201);
     }
 
     public function show(City $city): JsonResponse
@@ -34,7 +37,8 @@ class CityController extends Controller
     public function update(Request $request, City $city): JsonResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:cities,name,'.$city->id],
+            'country_id' => ['required', 'integer', 'exists:countries,id'],
+            'name' => [new NoBannedWords, 'required', 'string', 'max:255', Rule::unique('cities', 'name')->where('country_id', $request->input('country_id'))->ignore($city)],
         ]);
         $city->update($data);
 

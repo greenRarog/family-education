@@ -6,6 +6,7 @@ namespace App\Http\Controllers\v1\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\District;
+use App\Rules\NoBannedWords;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,7 +21,7 @@ class DistrictController extends Controller
     {
         $data = $request->validate([
             'city_id' => ['required', 'integer', 'exists:cities,id'],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [new NoBannedWords, 'required', 'string', 'max:255'],
         ]);
         $district = District::create($data);
 
@@ -36,7 +37,7 @@ class DistrictController extends Controller
     {
         $data = $request->validate([
             'city_id' => ['required', 'integer', 'exists:cities,id'],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [new NoBannedWords, 'required', 'string', 'max:255'],
         ]);
         $district->update($data);
 

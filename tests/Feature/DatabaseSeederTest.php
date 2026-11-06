@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Advertisement;
 use App\Models\User;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -39,8 +40,50 @@ class DatabaseSeederTest extends TestCase
         $this->seed(DemoSeeder::class);
         $this->assertSame($counts, $this->seededRecordCounts());
         $this->assertSame(3, User::query()->count());
-        $this->assertGreaterThan(0, DB::table('advertisements')->count());
+        $this->assertDatabaseCount('advertisements', 24);
         $this->assertDatabaseMissing('users', ['user_type' => 'admin']);
+    }
+
+    public function test_demo_advertisements_are_browsable_in_each_language(): void
+    {
+        $this->seed(DemoSeeder::class);
+        $ids = Advertisement::query()->orderBy('id')->pluck('id')->all();
+        $this->seed(DemoSeeder::class);
+        $this->assertSame($ids, Advertisement::query()->orderBy('id')->pluck('id')->all());
+
+        foreach (['ru' => 'ТЕСТОВОЕ ОБЪЯВЛЕНИЕ!', 'en' => 'DEMO ADVERTISEMENT!', 'es' => '¡ANUNCIO DE PRUEBA!'] as $language => $prefix) {
+            $items = $this->getJson('/api/advertisements/feed?language='.$language)
+                ->assertOk()
+                ->assertJsonPath('advertisements.total', 8)
+                ->assertJsonCount(8, 'advertisements.data')
+                ->json('advertisements.data');
+
+            $this->assertEqualsCanonicalizing(
+                ['family_to_family', 'family_to_teacher', 'teacher_to_service'],
+                array_values(array_unique(array_column($items, 'type'))),
+            );
+
+            foreach ($items as $item) {
+                $this->assertSame($language, $item['language']);
+                $this->assertStringStartsWith($prefix, $item['description']);
+                $this->getJson('/api/advertisements/'.$item['id'])
+                    ->assertOk()
+                    ->assertJsonPath('advertisement.description', $item['description'])
+                    ->assertJsonPath('advertisement.language', $language)
+                    ->assertJsonMissingPath('advertisement.children');
+            }
+
+            // The new language field must combine with the existing filters.
+            $this->getJson('/api/advertisements/feed?'.http_build_query([
+                'language' => $language,
+                'type' => 'family_to_teacher',
+                'format' => 'online',
+                'age' => 15,
+            ]))->assertOk()
+                ->assertJsonPath('advertisements.total', 1)
+                ->assertJsonPath('advertisements.data.0.language', $language)
+                ->assertJsonCount(2, 'advertisements.data.0.subjects');
+        }
     }
 
     public function test_demo_seeder_refuses_production_before_writing(): void
@@ -63,6 +106,9 @@ class DatabaseSeederTest extends TestCase
             'families',
             'children',
             'advertisements',
+            'advertisement_child',
+            'advertisement_subject',
+            'countries',
             'cities',
             'districts',
             'metro_stations',

@@ -72,7 +72,11 @@ class PublicAdvertisementTest extends TestCase
                     $this->assertFalse($data['moderation']['is_hidden']);
                 }
                 foreach (['city' => $family->city, 'district' => $district, 'metro_station' => $metroStation] as $key => $location) {
-                    $this->assertSame(['id' => $location->id, 'name' => $location->name], $data[$key]);
+                    $expected = ['id' => $location->id, 'name' => $location->name];
+                    if ($key === 'city') {
+                        $expected['country'] = $family->city->country->toArray();
+                    }
+                    $this->assertSame($expected, $data[$key]);
                 }
                 $this->assertSame([['id' => $subject->id, 'name' => $subject->name]], $data['subjects']);
                 $this->assertNull($data['public_teacher']);

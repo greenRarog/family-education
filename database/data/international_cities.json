@@ -1,0 +1,855 @@
+{
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/cities5000.zip",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "retrieved_on": "2026-11-06",
+    "archive_sha256": "1782ad5380564dcccde386b224b379c1791dd4d4adefb1c29d19c67f3c126141",
+    "selection": "Curated starter directory, not a complete census or current population ranking. Populated places selected by source population; known city districts excluded. Georgia: 20 selected major cities and regional/tourist centres. Local spelling corrections applied; Georgian names use Latin transliteration, Serbian names use Latin script. Source IDs retained for traceability.",
+    "name_overrides": {
+      "Munich": "München",
+      "Nuremberg": "Nürnberg",
+      "Freiburg": "Freiburg im Breisgau",
+      "Mülheim": "Mülheim an der Ruhr",
+      "Warsaw": "Warszawa",
+      "Bielsko-Biala": "Bielsko-Biała",
+      "Jastrzębie Zdrój": "Jastrzębie-Zdrój",
+      "Belgrade": "Beograd",
+      "Gasteiz / Vitoria": "Vitoria-Gasteiz",
+      "La Laguna": "San Cristóbal de La Laguna"
+    }
+  },
+  "countries": [
+    {
+      "code": "ES",
+      "name": "Испания",
+      "cities": [
+        {
+          "name": "A Coruña",
+          "geoname_id": 3119841
+        },
+        {
+          "name": "Albacete",
+          "geoname_id": 2522258
+        },
+        {
+          "name": "Alcalá de Henares",
+          "geoname_id": 3130616
+        },
+        {
+          "name": "Alcorcón",
+          "geoname_id": 3130564
+        },
+        {
+          "name": "Alicante",
+          "geoname_id": 2521978
+        },
+        {
+          "name": "Almería",
+          "geoname_id": 2521886
+        },
+        {
+          "name": "Badajoz",
+          "geoname_id": 2521420
+        },
+        {
+          "name": "Badalona",
+          "geoname_id": 3129028
+        },
+        {
+          "name": "Barcelona",
+          "geoname_id": 3128760
+        },
+        {
+          "name": "Bilbao",
+          "geoname_id": 3128026
+        },
+        {
+          "name": "Burgos",
+          "geoname_id": 3127461
+        },
+        {
+          "name": "Cartagena",
+          "geoname_id": 2520058
+        },
+        {
+          "name": "Castelló de la Plana",
+          "geoname_id": 2519752
+        },
+        {
+          "name": "Córdoba",
+          "geoname_id": 2519240
+        },
+        {
+          "name": "Donostia / San Sebastián",
+          "geoname_id": 3110044
+        },
+        {
+          "name": "Elche",
+          "geoname_id": 2518559
+        },
+        {
+          "name": "Fuenlabrada",
+          "geoname_id": 3121960
+        },
+        {
+          "name": "Getafe",
+          "geoname_id": 3121437
+        },
+        {
+          "name": "Gijón",
+          "geoname_id": 3121424
+        },
+        {
+          "name": "Granada",
+          "geoname_id": 2517117
+        },
+        {
+          "name": "Huelva",
+          "geoname_id": 2516548
+        },
+        {
+          "name": "Jerez de la Frontera",
+          "geoname_id": 2516326
+        },
+        {
+          "name": "L'Hospitalet de Llobregat",
+          "geoname_id": 3120619
+        },
+        {
+          "name": "Las Palmas de Gran Canaria",
+          "geoname_id": 2515270
+        },
+        {
+          "name": "Leganés",
+          "geoname_id": 3118594
+        },
+        {
+          "name": "León",
+          "geoname_id": 3118532
+        },
+        {
+          "name": "Lleida",
+          "geoname_id": 3118514
+        },
+        {
+          "name": "Logroño",
+          "geoname_id": 3118150
+        },
+        {
+          "name": "Madrid",
+          "geoname_id": 3117735
+        },
+        {
+          "name": "Marbella",
+          "geoname_id": 2514169
+        },
+        {
+          "name": "Mataró",
+          "geoname_id": 3117164
+        },
+        {
+          "name": "Murcia",
+          "geoname_id": 2513416
+        },
+        {
+          "name": "Málaga",
+          "geoname_id": 2514256
+        },
+        {
+          "name": "Móstoles",
+          "geoname_id": 3116025
+        },
+        {
+          "name": "Oviedo",
+          "geoname_id": 3114711
+        },
+        {
+          "name": "Palma",
+          "geoname_id": 2512989
+        },
+        {
+          "name": "Pamplona",
+          "geoname_id": 3114472
+        },
+        {
+          "name": "Sabadell",
+          "geoname_id": 3111199
+        },
+        {
+          "name": "Salamanca",
+          "geoname_id": 3111108
+        },
+        {
+          "name": "San Cristóbal de La Laguna",
+          "geoname_id": 2511401
+        },
+        {
+          "name": "Santa Cruz de Tenerife",
+          "geoname_id": 2511174
+        },
+        {
+          "name": "Santander",
+          "geoname_id": 3109718
+        },
+        {
+          "name": "Sevilla",
+          "geoname_id": 2510911
+        },
+        {
+          "name": "Tarragona",
+          "geoname_id": 3108288
+        },
+        {
+          "name": "Terrassa",
+          "geoname_id": 3108286
+        },
+        {
+          "name": "Valencia",
+          "geoname_id": 2509954
+        },
+        {
+          "name": "Valladolid",
+          "geoname_id": 3106672
+        },
+        {
+          "name": "Vigo",
+          "geoname_id": 3105976
+        },
+        {
+          "name": "Vitoria-Gasteiz",
+          "geoname_id": 3104499
+        },
+        {
+          "name": "Zaragoza",
+          "geoname_id": 3104324
+        }
+      ]
+    },
+    {
+      "code": "DE",
+      "name": "Германия",
+      "cities": [
+        {
+          "name": "Aachen",
+          "geoname_id": 3247449
+        },
+        {
+          "name": "Augsburg",
+          "geoname_id": 2954172
+        },
+        {
+          "name": "Berlin",
+          "geoname_id": 2950159
+        },
+        {
+          "name": "Bielefeld",
+          "geoname_id": 2949186
+        },
+        {
+          "name": "Bochum",
+          "geoname_id": 2947416
+        },
+        {
+          "name": "Bonn",
+          "geoname_id": 2946447
+        },
+        {
+          "name": "Braunschweig",
+          "geoname_id": 2945024
+        },
+        {
+          "name": "Bremen",
+          "geoname_id": 2944388
+        },
+        {
+          "name": "Chemnitz",
+          "geoname_id": 2940132
+        },
+        {
+          "name": "Darmstadt",
+          "geoname_id": 2938913
+        },
+        {
+          "name": "Dortmund",
+          "geoname_id": 2935517
+        },
+        {
+          "name": "Dresden",
+          "geoname_id": 2935022
+        },
+        {
+          "name": "Duisburg",
+          "geoname_id": 2934691
+        },
+        {
+          "name": "Düsseldorf",
+          "geoname_id": 2934246
+        },
+        {
+          "name": "Erfurt",
+          "geoname_id": 2929670
+        },
+        {
+          "name": "Essen",
+          "geoname_id": 2928810
+        },
+        {
+          "name": "Frankfurt am Main",
+          "geoname_id": 2925533
+        },
+        {
+          "name": "Freiburg im Breisgau",
+          "geoname_id": 2925177
+        },
+        {
+          "name": "Gelsenkirchen",
+          "geoname_id": 2921466
+        },
+        {
+          "name": "Hagen",
+          "geoname_id": 2912621
+        },
+        {
+          "name": "Halle (Saale)",
+          "geoname_id": 2911522
+        },
+        {
+          "name": "Hamburg",
+          "geoname_id": 2911298
+        },
+        {
+          "name": "Hamm",
+          "geoname_id": 2911240
+        },
+        {
+          "name": "Hannover",
+          "geoname_id": 2910831
+        },
+        {
+          "name": "Herne",
+          "geoname_id": 2905891
+        },
+        {
+          "name": "Karlsruhe",
+          "geoname_id": 2892794
+        },
+        {
+          "name": "Kassel",
+          "geoname_id": 2892518
+        },
+        {
+          "name": "Kiel",
+          "geoname_id": 2891122
+        },
+        {
+          "name": "Krefeld",
+          "geoname_id": 2884509
+        },
+        {
+          "name": "Köln",
+          "geoname_id": 2886242
+        },
+        {
+          "name": "Leipzig",
+          "geoname_id": 2879139
+        },
+        {
+          "name": "Ludwigshafen am Rhein",
+          "geoname_id": 2875376
+        },
+        {
+          "name": "Lübeck",
+          "geoname_id": 2875601
+        },
+        {
+          "name": "Magdeburg",
+          "geoname_id": 2874545
+        },
+        {
+          "name": "Mainz",
+          "geoname_id": 2874225
+        },
+        {
+          "name": "Mannheim",
+          "geoname_id": 2873891
+        },
+        {
+          "name": "Mönchengladbach",
+          "geoname_id": 2869894
+        },
+        {
+          "name": "Mülheim an der Ruhr",
+          "geoname_id": 2867838
+        },
+        {
+          "name": "München",
+          "geoname_id": 2867714
+        },
+        {
+          "name": "Münster",
+          "geoname_id": 2867543
+        },
+        {
+          "name": "Nürnberg",
+          "geoname_id": 2861650
+        },
+        {
+          "name": "Oberhausen",
+          "geoname_id": 2860410
+        },
+        {
+          "name": "Osnabrück",
+          "geoname_id": 2856883
+        },
+        {
+          "name": "Potsdam",
+          "geoname_id": 2852458
+        },
+        {
+          "name": "Rostock",
+          "geoname_id": 2844588
+        },
+        {
+          "name": "Saarbrücken",
+          "geoname_id": 2842647
+        },
+        {
+          "name": "Solingen",
+          "geoname_id": 2831580
+        },
+        {
+          "name": "Stuttgart",
+          "geoname_id": 2825297
+        },
+        {
+          "name": "Wiesbaden",
+          "geoname_id": 2809346
+        },
+        {
+          "name": "Wuppertal",
+          "geoname_id": 2805753
+        }
+      ]
+    },
+    {
+      "code": "PL",
+      "name": "Польша",
+      "cities": [
+        {
+          "name": "Białystok",
+          "geoname_id": 776069
+        },
+        {
+          "name": "Bielsko-Biała",
+          "geoname_id": 3103402
+        },
+        {
+          "name": "Bydgoszcz",
+          "geoname_id": 3102014
+        },
+        {
+          "name": "Bytom",
+          "geoname_id": 3101950
+        },
+        {
+          "name": "Chorzów",
+          "geoname_id": 3101619
+        },
+        {
+          "name": "Częstochowa",
+          "geoname_id": 3100946
+        },
+        {
+          "name": "Dąbrowa Górnicza",
+          "geoname_id": 3100796
+        },
+        {
+          "name": "Elbląg",
+          "geoname_id": 3099759
+        },
+        {
+          "name": "Gdańsk",
+          "geoname_id": 3099434
+        },
+        {
+          "name": "Gdynia",
+          "geoname_id": 3099424
+        },
+        {
+          "name": "Gliwice",
+          "geoname_id": 3099230
+        },
+        {
+          "name": "Gorzów Wielkopolski",
+          "geoname_id": 3098722
+        },
+        {
+          "name": "Grudziądz",
+          "geoname_id": 3098218
+        },
+        {
+          "name": "Inowrocław",
+          "geoname_id": 3097872
+        },
+        {
+          "name": "Jastrzębie-Zdrój",
+          "geoname_id": 3097391
+        },
+        {
+          "name": "Jaworzno",
+          "geoname_id": 3097333
+        },
+        {
+          "name": "Jelenia Góra",
+          "geoname_id": 3097257
+        },
+        {
+          "name": "Kalisz",
+          "geoname_id": 3096880
+        },
+        {
+          "name": "Katowice",
+          "geoname_id": 3096472
+        },
+        {
+          "name": "Kielce",
+          "geoname_id": 769250
+        },
+        {
+          "name": "Konin",
+          "geoname_id": 3095321
+        },
+        {
+          "name": "Koszalin",
+          "geoname_id": 3095049
+        },
+        {
+          "name": "Kraków",
+          "geoname_id": 3094802
+        },
+        {
+          "name": "Legnica",
+          "geoname_id": 3093692
+        },
+        {
+          "name": "Lubin",
+          "geoname_id": 3092931
+        },
+        {
+          "name": "Lublin",
+          "geoname_id": 765876
+        },
+        {
+          "name": "Nowy Sącz",
+          "geoname_id": 763534
+        },
+        {
+          "name": "Olsztyn",
+          "geoname_id": 763166
+        },
+        {
+          "name": "Opole",
+          "geoname_id": 3090048
+        },
+        {
+          "name": "Piotrków Trybunalski",
+          "geoname_id": 3088972
+        },
+        {
+          "name": "Poznań",
+          "geoname_id": 3088171
+        },
+        {
+          "name": "Płock",
+          "geoname_id": 3088825
+        },
+        {
+          "name": "Radom",
+          "geoname_id": 760778
+        },
+        {
+          "name": "Ruda Śląska",
+          "geoname_id": 3086800
+        },
+        {
+          "name": "Rybnik",
+          "geoname_id": 3086586
+        },
+        {
+          "name": "Rzeszów",
+          "geoname_id": 759734
+        },
+        {
+          "name": "Siedlce",
+          "geoname_id": 759412
+        },
+        {
+          "name": "Sosnowiec",
+          "geoname_id": 3085128
+        },
+        {
+          "name": "Szczecin",
+          "geoname_id": 3083829
+        },
+        {
+          "name": "Słupsk",
+          "geoname_id": 3085450
+        },
+        {
+          "name": "Tarnów",
+          "geoname_id": 757026
+        },
+        {
+          "name": "Toruń",
+          "geoname_id": 3083271
+        },
+        {
+          "name": "Tychy",
+          "geoname_id": 3082914
+        },
+        {
+          "name": "Warszawa",
+          "geoname_id": 756135
+        },
+        {
+          "name": "Wałbrzych",
+          "geoname_id": 3082707
+        },
+        {
+          "name": "Wrocław",
+          "geoname_id": 3081368
+        },
+        {
+          "name": "Włocławek",
+          "geoname_id": 3081741
+        },
+        {
+          "name": "Zabrze",
+          "geoname_id": 3080985
+        },
+        {
+          "name": "Zielona Góra",
+          "geoname_id": 3080165
+        },
+        {
+          "name": "Łódź",
+          "geoname_id": 3093133
+        }
+      ]
+    },
+    {
+      "code": "GE",
+      "name": "Грузия",
+      "cities": [
+        {
+          "name": "Akhaltsikhe",
+          "geoname_id": 615860
+        },
+        {
+          "name": "Batumi",
+          "geoname_id": 615532
+        },
+        {
+          "name": "Borjomi",
+          "geoname_id": 615403
+        },
+        {
+          "name": "Gardabani",
+          "geoname_id": 614575
+        },
+        {
+          "name": "Gori",
+          "geoname_id": 614455
+        },
+        {
+          "name": "Kaspi",
+          "geoname_id": 614104
+        },
+        {
+          "name": "Khashuri",
+          "geoname_id": 613988
+        },
+        {
+          "name": "Kobuleti",
+          "geoname_id": 613762
+        },
+        {
+          "name": "Kutaisi",
+          "geoname_id": 613607
+        },
+        {
+          "name": "Marneuli",
+          "geoname_id": 613074
+        },
+        {
+          "name": "Mtskheta",
+          "geoname_id": 612890
+        },
+        {
+          "name": "Ozurgeti",
+          "geoname_id": 612536
+        },
+        {
+          "name": "Poti",
+          "geoname_id": 612366
+        },
+        {
+          "name": "Rustavi",
+          "geoname_id": 612287
+        },
+        {
+          "name": "Samtredia",
+          "geoname_id": 612126
+        },
+        {
+          "name": "Senaki",
+          "geoname_id": 612053
+        },
+        {
+          "name": "Tbilisi",
+          "geoname_id": 611717
+        },
+        {
+          "name": "Telavi",
+          "geoname_id": 611694
+        },
+        {
+          "name": "Zestaponi",
+          "geoname_id": 610864
+        },
+        {
+          "name": "Zugdidi",
+          "geoname_id": 610824
+        }
+      ]
+    },
+    {
+      "code": "RS",
+      "name": "Сербия",
+      "cities": [
+        {
+          "name": "Bačka Palanka",
+          "geoname_id": 3204674
+        },
+        {
+          "name": "Beograd",
+          "geoname_id": 792680
+        },
+        {
+          "name": "Bor",
+          "geoname_id": 792456
+        },
+        {
+          "name": "Jagodina",
+          "geoname_id": 789923
+        },
+        {
+          "name": "Kikinda",
+          "geoname_id": 789518
+        },
+        {
+          "name": "Kragujevac",
+          "geoname_id": 789128
+        },
+        {
+          "name": "Kraljevo",
+          "geoname_id": 789107
+        },
+        {
+          "name": "Kruševac",
+          "geoname_id": 788975
+        },
+        {
+          "name": "Leskovac",
+          "geoname_id": 788709
+        },
+        {
+          "name": "Niš",
+          "geoname_id": 787657
+        },
+        {
+          "name": "Novi Pazar",
+          "geoname_id": 787595
+        },
+        {
+          "name": "Novi Sad",
+          "geoname_id": 3194360
+        },
+        {
+          "name": "Pančevo",
+          "geoname_id": 787237
+        },
+        {
+          "name": "Pirot",
+          "geoname_id": 787050
+        },
+        {
+          "name": "Požarevac",
+          "geoname_id": 786827
+        },
+        {
+          "name": "Prokuplje",
+          "geoname_id": 786690
+        },
+        {
+          "name": "Ruma",
+          "geoname_id": 3191429
+        },
+        {
+          "name": "Smederevo",
+          "geoname_id": 785756
+        },
+        {
+          "name": "Sombor",
+          "geoname_id": 3190342
+        },
+        {
+          "name": "Sremska Mitrovica",
+          "geoname_id": 3190103
+        },
+        {
+          "name": "Subotica",
+          "geoname_id": 3189595
+        },
+        {
+          "name": "Trstenik",
+          "geoname_id": 784873
+        },
+        {
+          "name": "Užice",
+          "geoname_id": 3188434
+        },
+        {
+          "name": "Valjevo",
+          "geoname_id": 3188402
+        },
+        {
+          "name": "Vranje",
+          "geoname_id": 784227
+        },
+        {
+          "name": "Vršac",
+          "geoname_id": 784136
+        },
+        {
+          "name": "Zaječar",
+          "geoname_id": 784024
+        },
+        {
+          "name": "Zrenjanin",
+          "geoname_id": 783814
+        },
+        {
+          "name": "Čačak",
+          "geoname_id": 792078
+        },
+        {
+          "name": "Šabac",
+          "geoname_id": 3191376
+        }
+      ]
+    }
+  ]
+}

@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Child;
 use App\Models\District;
 use App\Models\MetroStation;
+use App\Rules\NoBannedWords;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,6 +50,7 @@ class FamilyController extends Controller
 
         $data = Validator::make($request->all(), [
             'surname' => [
+                new NoBannedWords,
                 'required',
                 'string',
                 'max:255',
@@ -84,6 +86,8 @@ class FamilyController extends Controller
             ],
 
             'children.*.name' => [
+
+                new NoBannedWords,
                 'required',
                 'string',
                 'max:255',

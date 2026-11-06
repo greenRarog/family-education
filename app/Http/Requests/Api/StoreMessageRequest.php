@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api;
 
+use App\Rules\NoBannedWords;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreMessageRequest extends FormRequest
@@ -17,6 +18,7 @@ class StoreMessageRequest extends FormRequest
     {
         return [
             'message' => [
+                new NoBannedWords,
                 'required',
                 'string',
                 'max:5000',
