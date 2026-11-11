@@ -90,7 +90,8 @@ class DatabaseSeederTest extends TestCase
     {
         $this->app->instance('env', 'production');
         try {
-            $this->seed(DemoSeeder::class);
+            // Force past Artisan's production prompt to exercise the seeder's own guard.
+            Artisan::call('db:seed', ['--class' => DemoSeeder::class, '--force' => true]);
             $this->fail('Production demo seed should fail.');
         } catch (LogicException) {
             $this->assertDatabaseCount('users', 0);
