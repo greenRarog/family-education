@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     # Artisan migration/setup commands do not read PHPUnit XML settings.
     env:
@@ -92,4 +92,4 @@ jobs:
       - name: Test with PostgreSQL
         run: |
           php artisan config:clear
-          php artisan test --configuration=phpunit.pgsql.xml
+          vendor/bin/phpunit --configuration=phpunit.pgsql.xml
