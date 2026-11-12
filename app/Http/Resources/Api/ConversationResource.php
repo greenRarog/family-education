@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Resources\Api;
 
 use App\Enums\AdvertisementResponseStatus;
+use App\Enums\TeacherProfileVisibilityStatus;
+use App\Enums\UserType;
 use App\Models\Conversation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -24,8 +26,28 @@ class ConversationResource extends JsonResource
         $isOwner = $advertisement->user_id === $request->user()?->id;
         $unavailable = $advertisement->isAccountDeleted() || (($ownerBlocked || $advertisement->isHidden()) && ! $isOwner);
 
+        $peer = $isOwner ? $response->user : $advertisement->user;
+        $deleted = $ended || $peer->isAccountDeleted();
+        $profileStatus = null;
+        if (! $deleted && $peer->user_type === UserType::TEACHER) {
+            $profile = $peer->teacherProfile;
+            $profileStatus = 'unavailable';
+            if (! $peer->isBlocked()) {
+                if ($profile === null || ! $profile->public_profile_requested) {
+                    $profileStatus = 'private';
+                } elseif ($profile->public_profile_status === TeacherProfileVisibilityStatus::APPROVED) {
+                    $profileStatus = 'available';
+                }
+            }
+        }
+
         return [
             'id' => $r->id,
+            'counterpart' => [
+                'id' => $deleted ? null : $peer->id,
+                'name' => $deleted ? 'Удалённый аккаунт' : $peer->name,
+                'teacher_profile' => $profileStatus,
+            ],
             'communication_paused' => $paused,
             'account_deleted' => $ended,
             'expires_at' => $r->expires_at?->toISOString(),

@@ -19,8 +19,8 @@ class ConversationController extends Controller
         $user = $request->user();
         $conversations = Conversation::query()->retained()
             ->with([
-                'advertisementResponse.user',
-                'advertisementResponse.advertisement.user',
+                'advertisementResponse.user.teacherProfile',
+                'advertisementResponse.advertisement.user.teacherProfile',
                 'advertisementResponse.advertisement.hidingAction',
                 'lastMessage.user',
             ])->withExists([
@@ -63,8 +63,8 @@ class ConversationController extends Controller
         abort_if($conversation->isExpired(), 404);
         $data = $request->validate(['after_id' => ['nullable', 'integer', 'min:0']]);
         $conversation->load([
-            'advertisementResponse.user',
-            'advertisementResponse.advertisement.user',
+            'advertisementResponse.user.teacherProfile',
+            'advertisementResponse.advertisement.user.teacherProfile',
             'advertisementResponse.advertisement.hidingAction',
         ]);
 
