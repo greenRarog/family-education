@@ -51,14 +51,17 @@ class CreateAdmin extends Command
             return self::FAILURE;
         }
         try {
-            User::query()->create([...$data, 'password' => $password, 'user_type' => UserType::ADMIN]);
+            // This trusted console command verifies the address without sending mail.
+            $admin = new User([...$data, 'password' => $password, 'user_type' => UserType::ADMIN]);
+            $admin->email_verified_at = now();
+            $admin->save();
         } catch (QueryException) {
             // A racing invocation must not overwrite the winner or disclose credentials.
             $this->error('Could not create administrator. Check database availability and whether the account already exists.');
 
             return self::FAILURE;
         }
-        $this->info('Administrator created. Verify its email through the usual account flow.');
+        $this->info('Administrator created with a verified email.');
 
         return self::SUCCESS;
     }

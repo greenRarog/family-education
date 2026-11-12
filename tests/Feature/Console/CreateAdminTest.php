@@ -8,6 +8,7 @@ use App\Enums\UserType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class CreateAdminTest extends TestCase
@@ -16,6 +17,7 @@ class CreateAdminTest extends TestCase
 
     public function test_creation_hashes_password_and_repeat_preserves_credentials(): void
     {
+        Notification::fake();
         $this->artisan('admin:create', ['email' => 'Owner@example.com', '--name' => 'Owner'])
             ->expectsQuestion('Password', 'Local-secret-123')
             ->expectsQuestion('Confirm password', 'Local-secret-123')->assertSuccessful();
@@ -23,9 +25,18 @@ class CreateAdminTest extends TestCase
         $this->assertSame('owner@example.com', $admin->email);
         $this->assertSame(UserType::ADMIN, $admin->user_type);
         $this->assertTrue(Hash::check('Local-secret-123', $admin->password));
-        $this->assertNull($admin->email_verified_at);
+        $this->assertTrue($admin->hasVerifiedEmail());
+        Notification::assertNothingSent();
         $before = $admin->getAttributes();
         $this->artisan('admin:create', ['email' => 'owner@example.com', '--name' => 'Changed'])->assertSuccessful();
+        $this->assertSame($before, $admin->fresh()->getAttributes());
+    }
+
+    public function test_existing_unverified_admin_is_not_modified(): void
+    {
+        $admin = User::factory()->unverified()->create(['user_type' => UserType::ADMIN]);
+        $before = $admin->fresh()->getAttributes();
+        $this->artisan('admin:create', ['email' => $admin->email])->assertSuccessful();
         $this->assertSame($before, $admin->fresh()->getAttributes());
     }
 
